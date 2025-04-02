@@ -17,6 +17,7 @@ import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Provider } from "react-redux";
 import store from "./redux/store";
+import JobEdit from "./components/admin/Adminjobedit";
 const appRouter = createBrowserRouter([
   {
     path: "/",
@@ -76,6 +77,14 @@ const appRouter = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <AdminJobs />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/admin/jobsedit/:id",
+    element: (
+      <ProtectedRoute>
+        <JobEdit />
       </ProtectedRoute>
     ),
   },
