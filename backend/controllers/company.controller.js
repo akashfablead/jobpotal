@@ -1,6 +1,7 @@
 import { Company } from "../models/company.model.js";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
+import { Job } from "../models/job.model.js";
 
 export const registerCompany = async (req, res) => {
     try {
@@ -50,6 +51,7 @@ export const getCompany = async (req, res) => {
         console.log(error);
     }
 }
+
 // get company by id
 export const getCompanyById = async (req, res) => {
     try {
@@ -58,43 +60,179 @@ export const getCompanyById = async (req, res) => {
         if (!company) {
             return res.status(404).json({
                 message: "Company not found.",
-                success: false
+                success: false,
+                status: "error"
             })
         }
         return res.status(200).json({
             company,
-            success: true
+            success: true,
+            status: "success"
         })
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            status: "error"
+        });
     }
 }
+
 export const updateCompany = async (req, res) => {
     try {
         const { name, description, website, location } = req.body;
+        const companyId = req.params.id;
 
-        const file = req.file;
-        // idhar cloudinary ayega
-        const fileUri = getDataUri(file);
-        const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
-        const logo = cloudResponse.secure_url;
-
-        const updateData = { name, description, website, location, logo };
-
-        const company = await Company.findByIdAndUpdate(req.params.id, updateData, { new: true });
-
+        // Find company and verify ownership
+        const company = await Company.findById(companyId);
         if (!company) {
             return res.status(404).json({
                 message: "Company not found.",
                 success: false
-            })
+            });
         }
+
+        // Check if user owns the company
+        if (company.userId.toString() !== req.id) {
+            return res.status(403).json({
+                message: "Unauthorized: You don't own this company",
+                success: false
+            });
+        }
+
+        // Prepare update data
+        const updateData = {
+            name,
+            description,
+            website,
+            location
+        };
+
+        // Handle file upload if file exists
+        if (req.file) {
+            try {
+                const fileUri = getDataUri(req.file);
+                const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+                updateData.logo = cloudResponse.secure_url;
+            } catch (uploadError) {
+                return res.status(400).json({
+                    message: "Error uploading logo",
+                    success: false,
+                    error: uploadError.message
+                });
+            }
+        }
+
+        // Update company
+        const updatedCompany = await Company.findByIdAndUpdate(
+            companyId,
+            updateData,
+            { new: true, runValidators: true }
+        );
+
         return res.status(200).json({
-            message: "Company information updated.",
-            success: true
-        })
+            message: "Company information updated successfully.",
+            success: true,
+            company: updatedCompany
+        });
 
     } catch (error) {
-        console.log(error);
+        console.error("Update company error:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// export const deleteCompany = async (req, res) => {
+//     try {
+//         const companyId = req.params.id;
+
+//         // Find company and verify it exists
+//         const company = await Company.findById(companyId);
+//         if (!company) {
+//             return res.status(404).json({
+//                 message: "Company not found.",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         // Check if user owns the company
+//         if (company.userId.toString() !== req.id) {
+//             return res.status(403).json({
+//                 message: "Unauthorized: You don't own this company",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         // Delete the company
+//         await Company.findByIdAndDelete(companyId);
+
+//         return res.status(200).json({
+//             message: "Company deleted successfully.",
+//             success: true,
+//             status: "success"
+//         });
+
+//     } catch (error) {
+//         console.error("Delete company error:", error);
+//         return res.status(500).json({
+//             message: "Internal server error",
+//             success: false,
+//             error: error.message,
+//             status: "error"
+//         });
+//     }
+// }
+
+
+export const deleteCompany = async (req, res) => {
+    try {
+        const companyId = req.params.id;
+
+        // Find company and verify it exists
+        const company = await Company.findById(companyId);
+        if (!company) {
+            return res.status(404).json({
+                message: "Company not found.",
+                success: false,
+                status: "error"
+            });
+        }
+
+        // Check if user owns the company
+        if (company.userId.toString() !== req.id) {
+            return res.status(403).json({
+                message: "Unauthorized: You don't own this company",
+                success: false,
+                status: "error"
+            });
+        }
+
+        // Delete all jobs associated with this company
+        await Job.deleteMany({ company: companyId });
+
+        // Delete the company
+        await Company.findByIdAndDelete(companyId);
+
+        return res.status(200).json({
+            message: "Company and associated jobs deleted successfully.",
+            success: true,
+            status: "success"
+        });
+
+    } catch (error) {
+        console.error("Delete company error:", error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            error: error.message,
+            status: "error"
+        });
     }
 }

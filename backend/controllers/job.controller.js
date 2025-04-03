@@ -70,10 +70,16 @@ export const getJobById = async (req, res) => {
         if (!job) {
             return res.status(404).json({
                 message: "Jobs not found.",
-                success: false
+                success: false,
+                status: "error"
+
             })
         };
-        return res.status(200).json({ job, success: true });
+        return res.status(200).json({
+            job,
+            success: true,
+            status: "success"
+        });
     } catch (error) {
         console.log(error);
     }
@@ -101,6 +107,81 @@ export const getAdminJobs = async (req, res) => {
     }
 }
 
+// export const editJob = async (req, res) => {
+//     try {
+//         const jobId = req.params.id;
+//         const userId = req.id;
+//         const {
+//             title,
+//             description,
+//             requirements,
+//             salary,
+//             location,
+//             jobType,
+//             experience,
+//             position,
+//             companyId
+//         } = req.body;
+
+//         // Check if companyId is provided
+//         if (!companyId) {
+//             return res.status(400).json({
+//                 message: "Company ID is required",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         // Find job and check if it exists
+//         const job = await Job.findById(jobId);
+//         if (!job) {
+//             return res.status(404).json({
+//                 message: "Job not found",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         if (job.created_by.toString() !== userId) {
+//             return res.status(403).json({
+//                 message: "You are not authorized to edit this job",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         // Update job with required companyId
+//         const updatedJob = await Job.findByIdAndUpdate(
+//             jobId,
+//             {
+//                 title: title || job.title,
+//                 description: description || job.description,
+//                 requirements: requirements ? requirements.split(",") : job.requirements,
+//                 salary: Number(salary) || job.salary,
+//                 location: location || job.location,
+//                 jobType: jobType || job.jobType,
+//                 experienceLevel: experience || job.experienceLevel,
+//                 position: position || job.position,
+//                 company: companyId
+//             },
+//             { new: true }
+//         );
+
+//         return res.status(200).json({
+//             message: "Job updated successfully",
+//             job: updatedJob,
+//             success: true,
+//             status: "success"
+//         });
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             message: "Internal server error",
+//             success: false,
+//             status: "error"
+//         });
+//     }
+// }
 
 export const editJob = async (req, res) => {
     try {
@@ -118,19 +199,12 @@ export const editJob = async (req, res) => {
             companyId
         } = req.body;
 
-        // Find job and check if user is authorized
+        // Find job and check if it exists
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({
-                message: "Job not found",
-                success: false
-            });
-        }
-
-        if (job.created_by.toString() !== userId) {
-            return res.status(403).json({
-                message: "You are not authorized to edit this job",
-                success: false
+                status: "error",
+                message: "Job not found"
             });
         }
 
@@ -138,29 +212,71 @@ export const editJob = async (req, res) => {
         const updatedJob = await Job.findByIdAndUpdate(
             jobId,
             {
-                title: title || job.title,
-                description: description || job.description,
-                requirements: requirements ? requirements.split(",") : job.requirements,
-                salary: Number(salary) || job.salary,
-                location: location || job.location,
-                jobType: jobType || job.jobType,
-                experienceLevel: experience || job.experienceLevel,
-                position: position || job.position,
+                title,
+                description,
+                requirements: requirements.split(",").map(req => req.trim()),
+                salary: Number(salary),
+                location,
+                jobType,
+                experienceLevel: Number(experience),
+                position: Number(position),
                 company: companyId || job.company
             },
             { new: true }
         );
 
         return res.status(200).json({
+            status: "success",
             message: "Job updated successfully",
-            job: updatedJob,
-            success: true
+            job: updatedJob
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            status: "error",
+            message: "Internal server error"
+        });
+    }
+};
+
+export const deleteJob = async (req, res) => {
+    try {
+        const jobId = req.params.id;
+        const userId = req.id;
+
+        // Find job and check if it exists
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return res.status(404).json({
+                message: "Job not found",
+                success: false,
+                status: "error"
+            });
+        }
+
+        // Check if user is authorized to delete the job
+        if (job.created_by.toString() !== userId) {
+            return res.status(403).json({
+                message: "You are not authorized to delete this job",
+                success: false,
+                status: "error"
+            });
+        }
+
+        // Delete the job
+        await Job.findByIdAndDelete(jobId);
+
+        return res.status(200).json({
+            message: "Job deleted successfully",
+            success: true,
+            status: "success"
         });
     } catch (error) {
         console.log(error);
         return res.status(500).json({
             message: "Internal server error",
-            success: false
+            success: false,
+            status: "error"
         });
     }
 }

@@ -243,7 +243,6 @@ const JobEdit = () => {
 
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
-    // Clear error when user starts typing
     if (errors[e.target.name]) {
       setErrors({ ...errors, [e.target.name]: "" });
     }
@@ -255,28 +254,38 @@ const JobEdit = () => {
         const res = await axios.get(`${JOB_API_END_POINT}/get/${params.id}`, {
           withCredentials: true,
         });
-        const job = res.data.job;
 
-        // Format and set the job data
-        setInput({
-          title: job.title || "",
-          description: job.description || "",
-          requirements: Array.isArray(job.requirements)
-            ? job.requirements.join(", ")
-            : "",
-          salary: job.salary || "",
-          location: job.location || "",
-          jobType: job.jobType || "",
-          experience: job.experienceLevel || "",
-          position: job.position || "",
-          companyId: job.company || "",
-        });
+        if (res.data.status === "success") {
+          // setInput(res.data.job);
+          const requirementsString = Array.isArray(res.data.job.requirements)
+            ? res.data.job.requirements.join(", ")
+            : res.data.job.requirements;
+
+          setInput({
+            title: res.data.job.title || "",
+            description: res.data.job.description || "",
+            requirements: requirementsString || "",
+            salary: res.data.job.salary || "",
+            location: res.data.job.location || "",
+            jobType: res.data.job.jobType || "",
+            experience: res.data.job.experienceLevel || "",
+            position: res.data.job.position || "",
+            companyId: res.data.job.company || "", // Update to use company field from response
+          });
+        } else {
+          toast.error("Failed to fetch job details");
+        }
       } catch (error) {
         console.error("Error fetching job:", error);
-        toast.error("Failed to fetch job details");
+        toast.error(
+          error.response?.data?.message || "Failed to fetch job details"
+        );
       }
     };
-    fetchJob();
+
+    if (params.id) {
+      fetchJob();
+    }
   }, [params.id]);
 
   const validateForm = () => {
@@ -296,44 +305,94 @@ const JobEdit = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Modify the submitHandler to use the new FormData
+  // const submitHandler = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!validateForm()) {
+  //     toast.error("Please fill in all required fields");
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoading(true);
+  //     const formData = new FormData();
+
+  //     if (input.companyId) {
+  //       formData.append("companyId", input.companyId);
+  //     }
+  //     // Append basic fields
+  //     formData.append("title", input.title);
+  //     formData.append("description", input.description);
+  //     formData.append("location", input.location);
+  //     formData.append("jobType", input.jobType);
+
+  //     // Convert and append numeric fields
+  //     formData.append("experience", Number(input.experience));
+  //     formData.append("position", Number(input.position));
+  //     formData.append("salary", Number(input.salary));
+
+  //     // Convert requirements to array and append
+  //     const requirementsArray = input.requirements
+  //       .split(",")
+  //       .map((req) => req.trim());
+  //     formData.append("requirements", JSON.stringify(requirementsArray));
+
+  //     const res = await axios.post(
+  //       `${JOB_API_END_POINT}/editjobs/${params.id}`,
+  //       formData,
+  //       {
+  //         withCredentials: true,
+  //         headers: {
+  //           "Content-Type": "multipart/form-data",
+  //         },
+  //       }
+  //     );
+
+  //     if (res.data.status === "success") {
+  //       toast.success(res.data.message);
+  //       navigate("/admin/jobs");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating job:", error);
+  //     toast.error(error.response?.data?.message || "Something went wrong");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const submitHandler = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
     try {
       setLoading(true);
-
-      // Format the data according to the required structure
-      const formattedInput = {
+      const jobData = {
         title: input.title,
         description: input.description,
-        requirements: input.requirements
-          .split(",")
-          .map((req) => req.trim())
-          .filter((req) => req), // Remove empty items
-        salary: Number(input.salary),
+        requirements: input.requirements,
+        salary: input.salary,
         location: input.location,
         jobType: input.jobType,
-        experienceLevel: Number(input.experience),
-        position: Number(input.position),
-        company: input.companyId,
+        experience: input.experience,
+        position: input.position,
+        companyId: input.companyId,
       };
 
-      const res = await axios.put(
-        `${JOB_API_END_POINT}/edit/${params.id}`,
-        formattedInput,
+      const res = await axios.post(
+        `${JOB_API_END_POINT}/editjobs/${params.id}`,
+        jobData,
         {
+          headers: {
+            "Content-Type": "application/json",
+          },
           withCredentials: true,
         }
       );
 
-      if (res.data.success) {
+      if (res.data.status === "success") {
         toast.success(res.data.message);
         navigate("/admin/jobs");
+      } else {
+        toast.error(res.data.message || "Failed to update job");
       }
     } catch (error) {
       console.error("Error updating job:", error);
@@ -366,11 +425,7 @@ const JobEdit = () => {
                 name="title"
                 value={input.title}
                 onChange={changeEventHandler}
-                className={errors.title ? "border-red-500" : ""}
               />
-              {errors.title && (
-                <span className="text-red-500 text-sm">{errors.title}</span>
-              )}
             </div>
             <div>
               <Label>Description</Label>
@@ -378,13 +433,7 @@ const JobEdit = () => {
                 name="description"
                 value={input.description}
                 onChange={changeEventHandler}
-                className={errors.description ? "border-red-500" : ""}
               />
-              {errors.description && (
-                <span className="text-red-500 text-sm">
-                  {errors.description}
-                </span>
-              )}
             </div>
             <div>
               <Label>Requirements (comma separated)</Label>
@@ -393,13 +442,7 @@ const JobEdit = () => {
                 name="requirements"
                 value={input.requirements}
                 onChange={changeEventHandler}
-                className={errors.requirements ? "border-red-500" : ""}
               />
-              {errors.requirements && (
-                <span className="text-red-500 text-sm">
-                  {errors.requirements}
-                </span>
-              )}
             </div>
             <div>
               <Label>Salary</Label>
@@ -408,11 +451,7 @@ const JobEdit = () => {
                 name="salary"
                 value={input.salary}
                 onChange={changeEventHandler}
-                className={errors.salary ? "border-red-500" : ""}
               />
-              {errors.salary && (
-                <span className="text-red-500 text-sm">{errors.salary}</span>
-              )}
             </div>
             <div>
               <Label>Location</Label>
@@ -421,27 +460,17 @@ const JobEdit = () => {
                 name="location"
                 value={input.location}
                 onChange={changeEventHandler}
-                className={errors.location ? "border-red-500" : ""}
               />
-              {errors.location && (
-                <span className="text-red-500 text-sm">{errors.location}</span>
-              )}
             </div>
             <div>
               <Label>Job Type</Label>
               <Select
-                name="jobType"
                 value={input.jobType}
-                onValueChange={(value) => {
-                  setInput({ ...input, jobType: value });
-                  if (errors.jobType) {
-                    setErrors({ ...errors, jobType: "" });
-                  }
-                }}
+                onValueChange={(value) =>
+                  setInput({ ...input, jobType: value })
+                }
               >
-                <SelectTrigger
-                  className={errors.jobType ? "border-red-500" : ""}
-                >
+                <SelectTrigger>
                   <SelectValue placeholder="Select job type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -450,9 +479,6 @@ const JobEdit = () => {
                   <SelectItem value="contract">Contract</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.jobType && (
-                <span className="text-red-500 text-sm">{errors.jobType}</span>
-              )}
             </div>
             <div>
               <Label>Experience (years)</Label>
@@ -461,13 +487,7 @@ const JobEdit = () => {
                 name="experience"
                 value={input.experience}
                 onChange={changeEventHandler}
-                className={errors.experience ? "border-red-500" : ""}
               />
-              {errors.experience && (
-                <span className="text-red-500 text-sm">
-                  {errors.experience}
-                </span>
-              )}
             </div>
             <div>
               <Label>Number of Positions</Label>
@@ -476,11 +496,7 @@ const JobEdit = () => {
                 name="position"
                 value={input.position}
                 onChange={changeEventHandler}
-                className={errors.position ? "border-red-500" : ""}
               />
-              {errors.position && (
-                <span className="text-red-500 text-sm">{errors.position}</span>
-              )}
             </div>
           </div>
           {loading ? (

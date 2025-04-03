@@ -10,15 +10,21 @@ import {
 } from "../ui/table";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Edit2, Eye, MoreHorizontal } from "lucide-react";
+import { Edit2, Eye, MoreHorizontal, Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { toast } from "sonner";
+import { JOB_API_END_POINT } from "@/utils/constant";
+import axios from "axios";
+import { setAllAdminJobs } from "@/redux/jobSlice";
 
 const AdminJobsTable = () => {
   const { allAdminJobs, searchJobByText } = useSelector((store) => store.job);
 
   const [filterJobs, setFilterJobs] = useState(allAdminJobs);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     console.log("called");
@@ -33,6 +39,31 @@ const AdminJobsTable = () => {
     });
     setFilterJobs(filteredJobs);
   }, [allAdminJobs, searchJobByText]);
+
+  const handleDeleteJob = async (jobId) => {
+    try {
+      const res = await axios.post(
+        `${JOB_API_END_POINT}/delete/${jobId}`,
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (res.data.status === "success") {
+        toast.success("Job deleted successfully");
+        dispatch(
+          setAllAdminJobs(allAdminJobs.filter((job) => job._id !== jobId))
+        );
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete job");
+    }
+  };
+
   return (
     <div>
       <Table>
@@ -72,6 +103,13 @@ const AdminJobsTable = () => {
                     >
                       <Eye className="w-4" />
                       <span>Applicants</span>
+                    </div>
+                    <div
+                      onClick={() => handleDeleteJob(job._id)}
+                      className="flex items-center w-fit gap-2 cursor-pointer mt-2 text-red-500"
+                    >
+                      <Trash2 className="w-4" />
+                      <span>Delete</span>
                     </div>
                   </PopoverContent>
                 </Popover>
