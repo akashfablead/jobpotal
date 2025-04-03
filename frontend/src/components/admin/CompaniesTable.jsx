@@ -75,7 +75,7 @@ const CompaniesTable = () => {
           {filterCompany?.map((company) => (
             <tr>
               <TableCell>
-                <Avatar className="w-100 h-10">
+                <Avatar className="h-24 w-24">
                   <AvatarImage
                     src={company.logo}
                     alt={`${company.name} logo`}

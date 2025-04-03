@@ -41,6 +41,7 @@ export const getAllJobs = async (req, res) => {
             $or: [
                 { title: { $regex: keyword, $options: "i" } },
                 { description: { $regex: keyword, $options: "i" } },
+                { location: { $regex: keyword, $options: "i" } },
             ]
         };
         const jobs = await Job.find(query).populate({
@@ -64,9 +65,15 @@ export const getAllJobs = async (req, res) => {
 export const getJobById = async (req, res) => {
     try {
         const jobId = req.params.id;
-        const job = await Job.findById(jobId).populate({
-            path: "applications"
-        });
+        const job = await Job.findById(jobId)
+            .populate({
+                path: "applications"
+            })
+            .populate({
+                path: "company",
+                select: "name description website location logo" // Select the company fields you want
+            });
+
         if (!job) {
             return res.status(404).json({
                 message: "Jobs not found.",
@@ -280,3 +287,53 @@ export const deleteJob = async (req, res) => {
         });
     }
 }
+
+export const getSimilarJobs = async (req, res) => {
+    try {
+        const jobId = req.params.id;
+
+        // First get the current job to match against
+        const currentJob = await Job.findById(jobId);
+        if (!currentJob) {
+            return res.status(404).json({
+                message: "Job not found",
+                success: false,
+                status: "error"
+            });
+        }
+
+        // Find similar jobs based on title, location, or job type
+        const similarJobs = await Job.find({
+            $and: [
+                { _id: { $ne: jobId } }, // Exclude current job
+                {
+                    $or: [
+                        { title: { $regex: currentJob.title, $options: 'i' } },
+                        { location: currentJob.location },
+                        { jobType: currentJob.jobType },
+                    ]
+                }
+            ]
+        })
+            .populate({
+                path: "company",
+                select: "name logo location"
+            })
+            .limit(4)
+            .sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            jobs: similarJobs,
+            success: true,
+            status: "success"
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Error finding similar jobs",
+            success: false,
+            status: "error"
+        });
+    }
+};
