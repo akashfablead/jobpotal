@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import getDataUri from "../utils/datauri.js";
 import cloudinary from "../utils/cloudinary.js";
 import { OAuth2Client } from "google-auth-library";
+import { Subscription } from "../models/subscription.model.js";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -405,5 +406,41 @@ export const googleAuth = async (req, res) => {
     } catch (error) {
         console.error("Error in Google authentication:", error);
         return res.status(500).json({ message: "Google login failed", success: false });
+    }
+};
+
+
+export const checkSubscriptionStatus = async (req, res) => {
+    try {
+        const userId = req.params.userId || req.id;
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required"
+            });
+        }
+
+        const subscription = await Subscription.findOne({
+            userId,
+            status: { $in: [1, 2] },
+            endDate: { $gt: new Date() }
+        });
+
+        return res.status(200).json({
+            success: true,
+            hasActiveSubscription: !!subscription,
+            subscription: subscription ? {
+                planType: subscription.planType,
+                endDate: subscription.endDate,
+                status: subscription.status
+            } : null
+        });
+    } catch (error) {
+        console.error("Error checking subscription status:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to check subscription status"
+        });
     }
 };

@@ -240,6 +240,8 @@ const JobEdit = () => {
     position: "",
     companyId: "",
   });
+  const subscription = localStorage.getItem("hasActiveSubscription");
+  const hasActiveSubscription = subscription === "true";
 
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -401,6 +403,9 @@ const JobEdit = () => {
       setLoading(false);
     }
   };
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

@@ -51,7 +51,7 @@ export default function ScrollBaseAnimation({
     baseX.set(baseX.get() + moveBy);
   });
   return (
-    <div className="overflow-hidden whitespace-nowrap flex flex-nowrap">
+    <div className="overflow-hidden whitespace-nowrap flex flex-nowrap py-10">
       <motion.div
         className="flex whitespace-nowrap gap-10 flex-nowrap"
         style={{ x }}

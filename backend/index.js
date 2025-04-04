@@ -7,6 +7,7 @@ import userRoute from "./routes/user.route.js";
 import companyRoute from "./routes/company.route.js";
 import jobRoute from "./routes/job.route.js";
 import applicationRoute from "./routes/application.route.js";
+import subscriptionRoute from "./routes/subscription.route.js";
 // import passport from "passport";
 // import session from "express-session";
 // import "./utils/passport.js";
@@ -43,6 +44,8 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/company", companyRoute);
 app.use("/api/v1/job", jobRoute);
 app.use("/api/v1/application", applicationRoute);
+app.use("/api/v1/subscription", subscriptionRoute); // ...existing code...
+
 
 // // Google OAuth routes
 // app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));

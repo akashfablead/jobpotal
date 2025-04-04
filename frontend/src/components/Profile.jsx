@@ -9,6 +9,7 @@ import AppliedJobTable from "./AppliedJobTable";
 import UpdateProfileDialog from "./UpdateProfileDialog";
 import { useSelector } from "react-redux";
 import useGetAppliedJobs from "@/hooks/useGetAppliedJobs";
+import { Navigate } from "react-router-dom";
 
 // const skills = ["Html", "Css", "Javascript", "Reactjs"]
 const isResume = true;
@@ -17,7 +18,12 @@ const Profile = () => {
   useGetAppliedJobs();
   const [open, setOpen] = useState(false);
   const { user } = useSelector((store) => store.auth);
+  const subscription = localStorage.getItem("hasActiveSubscription");
+  const hasActiveSubscription = subscription === "true";
 
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

@@ -24,6 +24,7 @@ const Navbar = () => {
         dispatch(setUser(null));
         navigate("/");
         toast.success(res.data.message);
+        localStorage.clear();
       }
     } catch (error) {
       console.log(error);

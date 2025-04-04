@@ -67,10 +67,13 @@ import FilterCard from "./FilterCard";
 import Job from "./Job";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import { Navigate } from "react-router-dom";
 
 const Jobs = () => {
   const { allJobs, searchedQuery } = useSelector((store) => store.job);
   const [filteredJobs, setFilteredJobs] = useState(allJobs);
+  const subscription = localStorage.getItem("hasActiveSubscription");
+  const hasActiveSubscription = subscription === "true";
 
   useEffect(() => {
     let filtered = allJobs;
@@ -106,6 +109,9 @@ const Jobs = () => {
     setFilteredJobs(filtered);
   }, [allJobs, searchedQuery]);
 
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

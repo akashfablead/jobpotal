@@ -232,7 +232,7 @@
 import React, { useEffect, useState } from "react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { APPLICATION_API_END_POINT, JOB_API_END_POINT } from "@/utils/constant";
 import { setSingleJob } from "@/redux/jobSlice";
@@ -275,6 +275,8 @@ const JobDescription = () => {
   const params = useParams();
   const jobId = params.id;
   const dispatch = useDispatch();
+  const subscription = localStorage.getItem("hasActiveSubscription");
+  const hasActiveSubscription = subscription === "true";
 
   const applyJobHandler = async () => {
     try {
@@ -345,6 +347,9 @@ const JobDescription = () => {
     fetchSimilarJobs();
   }, [jobId, singleJob?.title]);
 
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

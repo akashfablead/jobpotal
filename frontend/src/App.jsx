@@ -18,6 +18,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { Provider } from "react-redux";
 import store from "./redux/store";
 import JobEdit from "./components/admin/Adminjobedit";
+import SubscriptionPlans from "./components/subscription/SubscriptionPlans";
+import ThankYouPage from "./components/ThankYouPage";
+import CancelSubscriptionModal from "./components/subscription/CancelSubscriptionModal";
 const appRouter = createBrowserRouter([
   {
     path: "/",
@@ -47,7 +50,19 @@ const appRouter = createBrowserRouter([
     path: "/profile",
     element: <Profile />,
   },
+  {
+    path: "/subscription/thank-you",
+    element: <ThankYouPage />,
+  },
+  {
+    path: "/subscription/cancel",
+    element: <CancelSubscriptionModal />,
+  },
   // admin ke liye yha se start hoga
+  {
+    path: "/subscription",
+    element: <SubscriptionPlans />,
+  },
   {
     path: "/admin/companies",
     element: (

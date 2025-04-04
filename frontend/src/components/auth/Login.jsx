@@ -12,6 +12,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLoading, setUser } from "@/redux/authSlice";
 import { Loader2 } from "lucide-react";
 import { GoogleLogin } from "@react-oauth/google";
+import {
+  setSubscriptionStatus,
+  setSubscriptionLoading,
+} from "@/redux/subscriptionSlice";
 
 // const Login = () => {
 
@@ -134,24 +138,98 @@ const Login = () => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
 
+  const checkSubscription = async (userId) => {
+    try {
+      dispatch(setSubscriptionLoading(true));
+      const res = await axios.get(
+        `${USER_API_END_POINT}/check-subscription/${userId}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (!res.data) {
+        throw new Error("No response data received");
+      }
+
+      dispatch(
+        setSubscriptionStatus({
+          hasActiveSubscription: res.data.hasActiveSubscription || false,
+          subscription: res.data.subscription || null,
+        })
+      );
+
+      return {
+        hasSubscription: res.data.hasActiveSubscription || false,
+        subscription: res.data.subscription || null,
+      };
+    } catch (error) {
+      console.error("Subscription check failed:", error);
+      toast.error(
+        "Unable to verify subscription status. Please try again later."
+      );
+      return {
+        hasSubscription: false,
+        subscription: null,
+      };
+    } finally {
+      dispatch(setSubscriptionLoading(false));
+    }
+  };
+
+  const handleLoginSuccess = async (userData) => {
+    if (!userData || !userData._id) {
+      toast.error("Invalid user data received");
+      return;
+    }
+
+    dispatch(setUser(userData));
+
+    try {
+      const { hasSubscription, subscription } = await checkSubscription(
+        userData._id
+      );
+      console.log("Subscription status:", hasSubscription);
+
+      // Store subscription status in local storage
+      localStorage.setItem("hasActiveSubscription", hasSubscription);
+
+      if (userData.role === "recruiter") {
+        if (hasSubscription) {
+          navigate("/admin/companies");
+          toast.success(`Welcome back, ${userData.fullname}`);
+        } else {
+          navigate("/subscription");
+        }
+      } else {
+        if (hasSubscription) {
+          navigate("/");
+          toast.success(`Welcome back, ${userData.fullname}`);
+        } else {
+          navigate("/subscription");
+        }
+      }
+    } catch (error) {
+      console.error("Error during login flow:", error);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
       dispatch(setLoading(true));
       const res = await axios.post(`${USER_API_END_POINT}/login`, input, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
+
       if (res.data.success) {
-        dispatch(setUser(res.data.user));
-        navigate("/");
-        toast.success(res.data.message);
+        await handleLoginSuccess(res.data.user);
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.message);
+      console.error(error);
+      toast.error(error.response?.data?.message || "Login failed");
     } finally {
       dispatch(setLoading(false));
     }
@@ -161,24 +239,21 @@ const Login = () => {
     try {
       dispatch(setLoading(true));
       const res = await axios.post(
-        `${USER_API_END_POINT}/login`, // Use the same login endpoint
-        { googleToken: credentialResponse.credential }, // Send Google token to the backend
+        `${USER_API_END_POINT}/auth/google`,
+        { googleToken: credentialResponse.credential },
         { withCredentials: true }
       );
 
       if (res.data.success) {
-        dispatch(setUser(res.data.user));
-        navigate("/");
-        toast.success(res.data.message);
+        await handleLoginSuccess(res.data.user);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.error(error.response?.data?.message || "Google Login Failed");
     } finally {
       dispatch(setLoading(false));
     }
   };
-
   useEffect(() => {
     if (user) {
       navigate("/");

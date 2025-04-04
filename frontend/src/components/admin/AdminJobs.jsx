@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../shared/Navbar";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import AdminJobsTable from "./AdminJobsTable";
 import useGetAllAdminJobs from "@/hooks/useGetAllAdminJobs";
@@ -13,10 +13,15 @@ const AdminJobs = () => {
   const [input, setInput] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const subscription = localStorage.getItem("hasActiveSubscription");
+  const hasActiveSubscription = subscription === "true";
 
   useEffect(() => {
     dispatch(setSearchJobByText(input));
   }, [input]);
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

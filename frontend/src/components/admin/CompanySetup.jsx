@@ -6,7 +6,7 @@ import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import axios from "axios";
 import { COMPANY_API_END_POINT } from "@/utils/constant";
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import useGetCompanyById from "@/hooks/useGetCompanyById";
@@ -24,6 +24,8 @@ const CompanySetup = () => {
   const { singleCompany } = useSelector((store) => store.company);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const subscription = localStorage.getItem("hasActiveSubscription");
+  const hasActiveSubscription = subscription === "true";
 
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -77,7 +79,9 @@ const CompanySetup = () => {
       file: singleCompany.file || null,
     });
   }, [singleCompany]);
-
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

@@ -8,6 +8,9 @@ import useGetAllJobs from "@/hooks/useGetAllJobs";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ScrollBaseAnimation from "./ScrollingSection";
+import { TwitterJobResponses } from "./TwitterJob";
+import { BackgroundBoxesDemo } from "./Sortbg";
+import { AnimatedTestimonialsDemo } from "./Teems";
 
 const Home = () => {
   useGetAllJobs();
@@ -22,11 +25,14 @@ const Home = () => {
     <div>
       <Navbar />
       <HeroSection />
-      {/* <ScrollBaseAnimation
-        children={["Item 1", "Item 2", "Item 3", "Item 4"]}
+      <ScrollBaseAnimation
+        children={["You’re ", "Hiring? ", "We’re ", "Hiring? "]}
         clasname="text-gray-800 font-bold"
-      /> */}
+      />
       <LatestJobs />
+      <AnimatedTestimonialsDemo />
+      <TwitterJobResponses />
+      <BackgroundBoxesDemo />
       <Footer />
     </div>
   );
