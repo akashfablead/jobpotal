@@ -7,14 +7,30 @@ import { Navigate, useNavigate } from "react-router-dom";
 import useGetAllCompanies from "@/hooks/useGetAllCompanies";
 import { useDispatch } from "react-redux";
 import { setSearchCompanyByText } from "@/redux/companySlice";
+import { checkSubscription } from "@/utils/checkSubscription";
 
 const Companies = () => {
   useGetAllCompanies();
   const [input, setInput] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const subscription = localStorage.getItem("hasActiveSubscription");
-  const hasActiveSubscription = subscription === "true";
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+
+  useEffect(() => {
+    const fetchSubscriptionStatus = async () => {
+      const userId = localStorage.getItem("userId"); // Ensure you have the userId in local storage
+      if (userId) {
+        const subscriptionStatus = await checkSubscription(userId, dispatch);
+        setHasActiveSubscription(subscriptionStatus.hasSubscription);
+        localStorage.setItem(
+          "hasActiveSubscription",
+          subscriptionStatus.hasSubscription
+        );
+      }
+    };
+
+    fetchSubscriptionStatus();
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(setSearchCompanyByText(input));
