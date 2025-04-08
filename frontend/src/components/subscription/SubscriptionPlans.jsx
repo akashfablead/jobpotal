@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Check } from "lucide-react";
 import axios from "axios";
@@ -11,6 +11,7 @@ import {
 import { Card } from "../ui/card";
 import { useSelector } from "react-redux";
 import { setSubscriptionStatus } from "@/redux/subscriptionSlice";
+import { use } from "react";
 
 const plans = [
   {
@@ -50,6 +51,7 @@ const plans = [
 const SubscriptionPlans = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth); // Add this line
+  const [sessionId, setSessionId] = useState(null); // Add this line
 
   const handleSubscribe = async (planId) => {
     try {
@@ -88,7 +90,7 @@ const SubscriptionPlans = () => {
         localStorage.setItem("hasActiveSubscription", true);
         localStorage.setItem(
           "subscription",
-          JSON.stringify(response.data.data)
+          JSON.stringify(response.data.subscription)
         );
       } else {
         throw new Error("Invalid response from server");

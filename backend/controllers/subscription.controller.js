@@ -5,11 +5,11 @@ import cron from 'node-cron';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // or any other email service
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
+  service: 'gmail', // or any other email service
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
 });
 // const SUBSCRIPTION_PRICES = {
 //     monthly: {
@@ -30,21 +30,21 @@ const transporter = nodemailer.createTransport({
 // };
 
 const SUBSCRIPTION_PRICES = {
-    monthly: {
-        price: 999,
-        months: 1,
-        methods: ['card']
-    },
-    semi_annual: {
-        price: 4999,
-        months: 6,
-        methods: ['card']
-    },
-    annual: {
-        price: 8999,
-        months: 12,
-        methods: ['card']
-    }
+  monthly: {
+    price: 999,
+    months: 1,
+    methods: ['card']
+  },
+  semi_annual: {
+    price: 4999,
+    months: 6,
+    methods: ['card']
+  },
+  annual: {
+    price: 8999,
+    months: 12,
+    methods: ['card']
+  }
 };
 
 // export const createSubscription = async (req, res) => {
@@ -147,166 +147,168 @@ const SUBSCRIPTION_PRICES = {
 // };
 
 export const createSubscription = async (req, res) => {
-    try {
-        if (!req.id) {
-            return res.status(401).json({
-                success: false,
-                message: "User not authenticated"
-            });
-        }
-
-        const { planType, customerInfo } = req.body;
-        const userId = req.id;
-
-        if (!customerInfo?.name || !customerInfo?.address) {
-            return res.status(400).json({
-                success: false,
-                message: "Customer name and address are required"
-            });
-        }
-
-        if (!SUBSCRIPTION_PRICES[planType]) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid plan type"
-            });
-        }
-
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: SUBSCRIPTION_PRICES[planType].methods,
-            mode: 'payment',
-            customer_email: customerInfo.email,
-            line_items: [{
-                price_data: {
-                    currency: 'inr',
-                    product_data: {
-                        name: `${planType} Subscription`,
-                        description: `${planType} Plan Subscription`,
-                    },
-                    unit_amount: SUBSCRIPTION_PRICES[planType].price * 100, // Convert to paise
-                },
-                quantity: 1,
-            }],
-            // success_url: `${process.env.CLIENT_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-            success_url: `${process.env.CLIENT_URL}/subscription/thank-you?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.CLIENT_URL}/subscription/cancel`,
-            shipping_address_collection: {
-                allowed_countries: ['IN'],
-            },
-            billing_address_collection: 'required',
-        });
-
-        const startDate = new Date();
-        const endDate = new Date(startDate);
-        endDate.setMonth(startDate.getMonth() + SUBSCRIPTION_PRICES[planType].months);
-
-        const subscription = await Subscription.create({
-            userId,
-            planType,
-            amount: SUBSCRIPTION_PRICES[planType].price,
-            duration: SUBSCRIPTION_PRICES[planType].months,
-            stripeSubscriptionId: session.id,
-            status: 1,
-            startDate,
-            endDate,
-            customerInfo: {
-                name: customerInfo.name,
-                email: customerInfo.email,
-                address: customerInfo.address
-            }
-        });
-        await sendSubscriptionEmail(customerInfo.email, {
-            planType,
-            amount: SUBSCRIPTION_PRICES[planType].price,
-            duration: SUBSCRIPTION_PRICES[planType].months,
-            sessionId: session.id,
-        });
-
-        return res.status(200).json({
-            success: true,
-            message: "Subscription initiated",
-            data: {
-                sessionId: session.id,
-                subscriptionId: subscription._id,
-                url: session.url
-            }
-        });
-
-    } catch (error) {
-        console.error('Subscription error:', error);
-        return res.status(500).json({
-            success: false,
-            message: error.message || "Error creating subscription"
-        });
+  try {
+    if (!req.id) {
+      return res.status(401).json({
+        success: false,
+        message: "User not authenticated"
+      });
     }
+
+    const { planType, customerInfo } = req.body;
+    const userId = req.id;
+
+    if (!customerInfo?.name || !customerInfo?.address) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer name and address are required"
+      });
+    }
+
+    if (!SUBSCRIPTION_PRICES[planType]) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid plan type"
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: SUBSCRIPTION_PRICES[planType].methods,
+      mode: 'payment',
+      customer_email: customerInfo.email,
+      line_items: [{
+        price_data: {
+          currency: 'inr',
+          product_data: {
+            name: `${planType} Subscription`,
+            description: `${planType} Plan Subscription`,
+          },
+          unit_amount: SUBSCRIPTION_PRICES[planType].price * 100, // Convert to paise
+        },
+        quantity: 1,
+      }],
+      // success_url: `${process.env.CLIENT_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${process.env.CLIENT_URL}/subscription/thank-you?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CLIENT_URL}/subscription/cancel`,
+      shipping_address_collection: {
+        allowed_countries: ['IN'],
+      },
+      billing_address_collection: 'required',
+    });
+
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setMonth(startDate.getMonth() + SUBSCRIPTION_PRICES[planType].months);
+
+    const subscription = await Subscription.create({
+      userId,
+      planType,
+      amount: SUBSCRIPTION_PRICES[planType].price,
+      duration: SUBSCRIPTION_PRICES[planType].months,
+      stripeSubscriptionId: session.id,
+      status: 1,
+      startDate,
+      endDate,
+      customerInfo: {
+        name: customerInfo.name,
+        email: customerInfo.email,
+        address: customerInfo.address
+      }
+    });
+
+
+    return res.status(200).json({
+      success: true,
+      message: "Subscription initiated",
+      data: {
+        sessionId: session.id,
+        subscriptionId: subscription._id,
+        url: session.url
+      }
+
+    });
+
+  } catch (error) {
+    console.error('Subscription error:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Error creating subscription"
+    });
+  }
 };
 
 
 export const verifySubscription = async (req, res) => {
-    try {
-        const { sessionId } = req.params;
+  try {
+    const { sessionId } = req.params;
 
-        const session = await stripe.checkout.sessions.retrieve(sessionId);
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        if (session.payment_status === 'paid') {
-            // Update subscription status to completed
-            await Subscription.findOneAndUpdate(
-                { stripeSubscriptionId: sessionId },
-                { status: 2 }
-            );
+    if (session.payment_status === 'paid') {
+      // Update subscription status to completed
+      await Subscription.findOneAndUpdate(
+        { stripeSubscriptionId: sessionId },
+        { status: 2 }
+      );
 
-            return res.status(200).json({
-                success: true,
-                message: "Payment successful"
-            });
-        }
+      await sendSubscriptionEmail(customerInfo.email, {
+        planType,
+        amount: SUBSCRIPTION_PRICES[planType].price,
+        duration: SUBSCRIPTION_PRICES[planType].months,
+        sessionId: session.id,
+      });
 
-        return res.status(400).json({
-            success: false,
-            message: "Payment not completed"
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Error verifying payment"
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Payment successful"
+      });
     }
+
+    return res.status(400).json({
+      success: false,
+      message: "Payment not completed"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error verifying payment"
+    });
+  }
 };
 
 export const cancelSubscription = async (req, res) => {
-    try {
-        const { subscriptionId } = req.params;
-        const userId = req.id;
+  try {
+    const { subscriptionId } = req.params;
+    const userId = req.id;
 
-        const subscription = await Subscription.findOne({
-            _id: subscriptionId,
-            userId
-        });
+    const subscription = await Subscription.findOne({
+      _id: subscriptionId,
+      userId
+    });
 
-        if (!subscription) {
-            return res.status(404).json({
-                success: false,
-                message: "Subscription not found"
-            });
-        }
-
-        subscription.status = 0; // cancelled
-        await subscription.save();
-
-        return res.status(200).json({
-            success: true,
-            message: "Subscription cancelled successfully"
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            success: false,
-            message: "Error cancelling subscription"
-        });
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        message: "Subscription not found"
+      });
     }
-};
 
+    subscription.status = 0; // cancelled
+    await subscription.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Subscription cancelled successfully"
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Error cancelling subscription"
+    });
+  }
+};
 
 // export const sendSubscriptionEmail = async (email, subscriptionDetails) => {
 //     const mailOptions = {
@@ -353,11 +355,11 @@ export const cancelSubscription = async (req, res) => {
 // };
 
 const sendSubscriptionEmail = async (email, subscriptionDetails) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Subscription Confirmation',
-        html: `
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Subscription Confirmation',
+    html: `
             <!DOCTYPE html>
             <html>
               <head>
@@ -537,17 +539,17 @@ const sendSubscriptionEmail = async (email, subscriptionDetails) => {
               </body>
             </html>
         `,
-    };
+  };
 
-    await transporter.sendMail(mailOptions);
+  await transporter.sendMail(mailOptions);
 };
 
 const sendReminderEmail = async (email, subscriptionDetails) => {
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Subscription Renewal Reminder',
-        html: `
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Subscription Renewal Reminder',
+    html: `
             <!DOCTYPE html>
             <html>
               <head>
@@ -720,31 +722,31 @@ const sendReminderEmail = async (email, subscriptionDetails) => {
               </body>
             </html>
         `,
-    };
+  };
 
-    await transporter.sendMail(mailOptions);
+  await transporter.sendMail(mailOptions);
 };
 
 // Scheduled job to check for subscriptions ending in 5 days
 cron.schedule('0 0 * * *', async () => {
-    try {
-        const today = new Date();
-        const fiveDaysFromNow = new Date(today);
-        fiveDaysFromNow.setDate(today.getDate() + 5);
+  try {
+    const today = new Date();
+    const fiveDaysFromNow = new Date(today);
+    fiveDaysFromNow.setDate(today.getDate() + 5);
 
-        const subscriptions = await Subscription.find({
-            endDate: { $lte: fiveDaysFromNow },
-            status: 1 // Active subscriptions
-        });
+    const subscriptions = await Subscription.find({
+      endDate: { $lte: fiveDaysFromNow },
+      status: 1 // Active subscriptions
+    });
 
-        for (const subscription of subscriptions) {
-            await sendReminderEmail(subscription.customerInfo.email, {
-                planType: subscription.planType,
-                amount: subscription.amount,
-                duration: subscription.duration,
-            });
-        }
-    } catch (error) {
-        console.error('Error sending reminder emails:', error);
+    for (const subscription of subscriptions) {
+      await sendReminderEmail(subscription.customerInfo.email, {
+        planType: subscription.planType,
+        amount: subscription.amount,
+        duration: subscription.duration,
+      });
     }
+  } catch (error) {
+    console.error('Error sending reminder emails:', error);
+  }
 });
