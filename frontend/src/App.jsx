@@ -21,10 +21,35 @@ import JobEdit from "./components/admin/Adminjobedit";
 import SubscriptionPlans from "./components/subscription/SubscriptionPlans";
 import ThankYouPage from "./components/ThankYouPage";
 import CancelSubscriptionModal from "./components/subscription/CancelSubscriptionModal";
+import FAQ from "./components/pages/FAQ";
+import Resources from "./components/pages/Resources";
+import Pricing from "./components/pages/Pricing";
+import About from "./components/pages/About";
+import Contact from "./components/pages/Contact";
 const appRouter = createBrowserRouter([
   {
     path: "/",
     element: <Home />,
+  },
+  {
+    path: "/faq",
+    element: <FAQ />,
+  },
+  {
+    path: "/resources",
+    element: <Resources />,
+  },
+  {
+    path: "/pricing",
+    element: <Pricing />,
+  },
+  {
+    path: "/about",
+    element: <About />,
+  },
+  {
+    path: "/contactus",
+    element: <Contact />,
   },
   {
     path: "/login",
@@ -50,10 +75,12 @@ const appRouter = createBrowserRouter([
     path: "/profile",
     element: <Profile />,
   },
+  
   {
     path: "/subscription/thank-you",
     element: <ThankYouPage />,
   },
+  
   {
     path: "/subscription/cancel",
     element: <CancelSubscriptionModal />,

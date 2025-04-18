@@ -147,7 +147,7 @@ export const login = async (req, res) => {
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     role: user.role,
-                    profile: user.profile,
+                    // profile: user.profile,
                     // Use the uploaded or Google profile picture
                     profilePhoto: user.profile.profilePhoto,
                 },
@@ -328,10 +328,92 @@ export const updateProfile = async (req, res) => {
 //         return res.status(500).json({ message: "Google login failed", success: false });
 //     }
 // };
+
+// export const googleAuth = async (req, res) => {
+//     try {
+//         const { token } = req.body;
+//         const file = req.file; // Get the uploaded file
+
+//         // Verify Google token
+//         const ticket = await client.verifyIdToken({
+//             idToken: token,
+//             audience: process.env.GOOGLE_CLIENT_ID,
+//         });
+
+//         const { name, email, picture } = ticket.getPayload();
+
+//         // Check if user already exists
+//         let user = await User.findOne({ email });
+//         if (!user) {
+//             let profilePhotoUrl = picture; // Default to Google profile picture
+
+//             // If a file is uploaded, process it as binary and upload to Cloudinary
+//             if (file) {
+//                 try {
+//                     const fileUri = getDataUri(file); // Convert file to data URI
+//                     const binaryData = Buffer.from(fileUri.content, "base64"); // Convert to binary
+//                     const cloudResponse = await cloudinary.uploader.upload_stream(
+//                         { resource_type: "image" },
+//                         (error, result) => {
+//                             if (error) {
+//                                 throw new Error("Cloudinary upload failed");
+//                             }
+//                             return result;
+//                         }
+//                     ).end(binaryData); // Upload binary data
+//                     profilePhotoUrl = cloudResponse.secure_url; // Use the uploaded file's URL
+//                 } catch (uploadError) {
+//                     console.error("Error uploading file to Cloudinary:", uploadError);
+//                     return res.status(500).json({
+//                         message: "Failed to upload profile photo",
+//                         success: false,
+//                     });
+//                 }
+//             } else {
+//                 profilePhotoUrl = "https://th.bing.com/th/id/OIP.tr7ifhDScWdY_1VY9G_z_QHaHa?w=222&h=220&c…"; // Set a default profile photo URL
+//             }
+
+//             // Create a new user if not found
+//             user = await User.create({
+//                 fullname: name,
+//                 email,
+//                 phoneNumber: null, // No phone number for Google users
+//                 password: null, // No password for Google users
+//                 role: "student", // Default role
+//                 profile: {
+//                     profilePhoto: profilePhotoUrl, // Use the uploaded or Google profile picture
+//                 },
+//             });
+//         }
+
+//         // Generate JWT token
+//         const tokenData = { userId: user._id };
+//         const authToken = jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: "1d" });
+
+//         return res.status(200).cookie("token", authToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }).json({
+//             message: "Google login successful",
+//             user: {
+//                 _id: user._id,
+//                 fullname: user.fullname,
+//                 email: user.email,
+//                 phoneNumber: user.phoneNumber,
+//                 role: user.role,
+//                 profile: user.profile,
+//                 // Use the uploaded or Google profile picture
+//                 profilePhoto: user.profile.profilePhoto,
+//             },
+//             success: true,
+//         });
+//     } catch (error) {
+//         console.error("Error in Google authentication:", error);
+//         return res.status(500).json({ message: "Google login failed", success: false });
+//     }
+// };
+
 export const googleAuth = async (req, res) => {
     try {
         const { token } = req.body;
-        const file = req.file; // Get the uploaded file
+        const file = req.file; // Get the uploaded file, if any
 
         // Verify Google token
         const ticket = await client.verifyIdToken({
@@ -346,20 +428,11 @@ export const googleAuth = async (req, res) => {
         if (!user) {
             let profilePhotoUrl = picture; // Default to Google profile picture
 
-            // If a file is uploaded, process it as binary and upload to Cloudinary
+            // If a file is uploaded, process it and upload to Cloudinary
             if (file) {
                 try {
                     const fileUri = getDataUri(file); // Convert file to data URI
-                    const binaryData = Buffer.from(fileUri.content, "base64"); // Convert to binary
-                    const cloudResponse = await cloudinary.uploader.upload_stream(
-                        { resource_type: "image" },
-                        (error, result) => {
-                            if (error) {
-                                throw new Error("Cloudinary upload failed");
-                            }
-                            return result;
-                        }
-                    ).end(binaryData); // Upload binary data
+                    const cloudResponse = await cloudinary.uploader.upload(fileUri.content); // Upload to Cloudinary
                     profilePhotoUrl = cloudResponse.secure_url; // Use the uploaded file's URL
                 } catch (uploadError) {
                     console.error("Error uploading file to Cloudinary:", uploadError);
@@ -368,8 +441,6 @@ export const googleAuth = async (req, res) => {
                         success: false,
                     });
                 }
-            } else {
-                profilePhotoUrl = "https://th.bing.com/th/id/OIP.tr7ifhDScWdY_1VY9G_z_QHaHa?w=222&h=220&c…"; // Set a default profile photo URL
             }
 
             // Create a new user if not found
@@ -398,8 +469,6 @@ export const googleAuth = async (req, res) => {
                 phoneNumber: user.phoneNumber,
                 role: user.role,
                 profile: user.profile,
-                // Use the uploaded or Google profile picture
-                profilePhoto: user.profile.profilePhoto,
             },
             success: true,
         });
@@ -408,7 +477,6 @@ export const googleAuth = async (req, res) => {
         return res.status(500).json({ message: "Google login failed", success: false });
     }
 };
-
 
 export const checkSubscriptionStatus = async (req, res) => {
     try {

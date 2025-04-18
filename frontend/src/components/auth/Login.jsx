@@ -6,7 +6,7 @@ import { RadioGroup } from "../ui/radio-group";
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { USER_API_END_POINT } from "@/utils/constant";
+import { USER_API_END_POINT, USER_API_GOOGLE_END_POINT } from "@/utils/constant";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoading, setUser } from "@/redux/authSlice";
@@ -239,8 +239,8 @@ const Login = () => {
     try {
       dispatch(setLoading(true));
       const res = await axios.post(
-        `${USER_API_END_POINT}/auth/google`,
-        { googleToken: credentialResponse.credential },
+        `${USER_API_GOOGLE_END_POINT}/google`,
+        { token: credentialResponse.credential },
         { withCredentials: true }
       );
 

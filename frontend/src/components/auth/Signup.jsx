@@ -235,7 +235,7 @@ const Signup = () => {
       dispatch(setLoading(true));
 
       const res = await axios.post(
-        `http://localhost:8000/api/v1/user/auth/google`,
+        `${USER_API_GOOGLE_END_POINT}/google`,
         { token: credentialResponse.credential }, // Send Google token to the backend
         { withCredentials: true }
       );

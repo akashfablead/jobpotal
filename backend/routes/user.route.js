@@ -8,8 +8,8 @@ const router = express.Router();
 router.route("/register").post(singleUpload, register);
 router.route("/login").post(login);
 router.route("/logout").get(logout);
-router.route("/profile/update").post(isAuthenticated, singleUpload, updateProfile);
 router.route("/auth/google").post(googleAuth);
+router.route("/profile/update").post(isAuthenticated, singleUpload, updateProfile);
 router.route("/check-subscription/:userId").get(isAuthenticated, checkSubscriptionStatus);
 
 export default router;
