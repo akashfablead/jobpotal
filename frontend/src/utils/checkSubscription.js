@@ -1,5 +1,4 @@
 import axios from "axios";
-import { toast } from "react-toastify";
 import { setSubscriptionStatus, setSubscriptionLoading } from "../redux/subscriptionSlice";
 
 const USER_API_END_POINT = import.meta.env.VITE_USER_API;
@@ -25,7 +24,6 @@ export const checkSubscription = async (userId, dispatch) => {
     };
   } catch (error) {
     console.error("Subscription check failed:", error);
-    toast.error("Unable to verify subscription status. Please try again later.");
     return { hasSubscription: false };
   } finally {
     dispatch(setSubscriptionLoading(false));

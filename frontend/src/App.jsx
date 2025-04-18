@@ -19,7 +19,7 @@ import { Provider } from "react-redux";
 import store from "./redux/store";
 import JobEdit from "./components/admin/Adminjobedit";
 import SubscriptionPlans from "./components/subscription/SubscriptionPlans";
-import ThankYouPage from "./components/ThankYouPage";
+import ThankYouPage from "./components/subscription/ThankYouPage";
 import CancelSubscriptionModal from "./components/subscription/CancelSubscriptionModal";
 import FAQ from "./components/pages/FAQ";
 import Resources from "./components/pages/Resources";
@@ -75,6 +75,7 @@ const appRouter = createBrowserRouter([
     path: "/profile",
     element: <Profile />,
   },
+
   
   {
     path: "/subscription/thank-you",
@@ -95,6 +96,14 @@ const appRouter = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <Companies />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/subscription/thank-you",
+    element: (
+      <ProtectedRoute>
+        <ThankYouPage />
       </ProtectedRoute>
     ),
   },
