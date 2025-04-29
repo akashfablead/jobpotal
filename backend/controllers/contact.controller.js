@@ -1,8 +1,7 @@
-const contactModel = require("../models/contact.model");
 
 // Handle contact form submission
-    export const submitContactForm = async (req, res) => {
-    
+export const submitContactForm = async (req, res) => {
+
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {

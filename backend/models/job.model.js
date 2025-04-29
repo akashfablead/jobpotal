@@ -16,9 +16,9 @@ const jobSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    experienceLevel:{
-        type:Number,
-        required:true,
+    experienceLevel: {
+        type: Number,
+        required: true,
     },
     location: {
         type: String,
@@ -47,6 +47,18 @@ const jobSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Application',
         }
+    ],
+    savedJobs: [
+        {
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            status: {
+                type: Number,
+                default: 1 // 1 for active, 0 for inactive
+            }
+        }
     ]
-},{timestamps:true});
+}, { timestamps: true });
 export const Job = mongoose.model("Job", jobSchema);

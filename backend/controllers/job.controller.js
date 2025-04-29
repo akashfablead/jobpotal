@@ -337,3 +337,83 @@ export const getSimilarJobs = async (req, res) => {
         });
     }
 };
+
+export const saveJob = async (req, res) => {
+    try {
+        const jobId = req.params.id;
+        const userId = req.id;
+        const { status } = req.body; // 1 for active, 0 for inactive
+
+        // Find the job
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return res.status(404).json({
+                message: "Job not found",
+                success: false,
+                status: "error"
+            });
+        }
+
+        // Check if user has already saved this job
+        const existingSaveIndex = job.savedJobs.findIndex(
+            save => save.user.toString() === userId
+        );
+
+        if (existingSaveIndex !== -1) {
+            // Update existing save status
+            job.savedJobs[existingSaveIndex].status = status;
+        } else {
+            // Add new save
+            job.savedJobs.push({
+                user: userId,
+                status: status
+            });
+        }
+
+        await job.save();
+
+        return res.status(200).json({
+            message: status === 1 ? "Job saved successfully" : "Job unsaved successfully",
+            success: true,
+            status: "success"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            status: "error"
+        });
+    }
+};
+
+export const getSavedJobs = async (req, res) => {
+    try {
+        const userId = req.id;
+
+        // Find all jobs where the user has saved with status 1 (active)
+        const savedJobs = await Job.find({
+            'savedJobs': {
+                $elemMatch: {
+                    'user': userId,
+                    'status': 1
+                }
+            }
+        }).populate({
+            path: "company"
+        }).sort({ createdAt: -1 });
+
+        return res.status(200).json({
+            jobs: savedJobs,
+            success: true,
+            status: "success"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            status: "error"
+        });
+    }
+};
