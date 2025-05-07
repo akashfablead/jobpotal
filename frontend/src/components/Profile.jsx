@@ -18,12 +18,12 @@ const Profile = () => {
   useGetAppliedJobs();
   const [open, setOpen] = useState(false);
   const { user } = useSelector((store) => store.auth);
-  const subscription = localStorage.getItem("hasActiveSubscription");
-  const hasActiveSubscription = subscription === "true";
+  // const subscription = localStorage.getItem("hasActiveSubscription");
+  // const hasActiveSubscription = subscription === "true";
 
-  if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" />;
-  }
+  // if (!hasActiveSubscription) {
+  //   return <Navigate to="/subscription" />;
+  // }
   return (
     <div>
       <Navbar />

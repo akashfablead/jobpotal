@@ -1,4 +1,6 @@
 import React from 'react';
+import Navbar from '../shared/Navbar';
+import Footer from '../shared/Footer';
 
 const FAQ = () => {
   const faqs = [
@@ -25,6 +27,8 @@ const FAQ = () => {
   ];
 
   return (
+    <>
+    <Navbar />
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6">Frequently Asked Questions</h1>
       <div className="space-y-4">
@@ -36,6 +40,8 @@ const FAQ = () => {
         ))}
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
 

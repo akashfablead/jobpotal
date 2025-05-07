@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import Navbar from '../shared/Navbar';
 import { CONTACT_API_END_POINT } from '@/utils/constant';
+import Footer from '../shared/Footer';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -108,6 +109,7 @@ const Contact = () => {
       </form>
       {status && <p className="mt-4 text-sm text-gray-600">{status}</p>}
     </div>
+    <Footer />
     </>
   );
 };

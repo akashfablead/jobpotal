@@ -63,6 +63,12 @@ const Navbar = () => {
                 <li>
                   <Link to="/browse">Browse</Link>
                 </li>
+                <li>
+                  <Link to="/about">About</Link>
+                </li>
+                <li>
+                  <Link to="/contactus">Contact</Link>
+                </li>
               </>
             )}
           </ul>

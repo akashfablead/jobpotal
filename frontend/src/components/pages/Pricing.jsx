@@ -1,7 +1,11 @@
 import React from 'react';
+import Navbar from '../shared/Navbar';
+import Footer from '../shared/Footer';
 
 const Pricing = () => {
   return (
+    <>
+    <Navbar />  
     <div className="max-w-screen-lg mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Pricing</h1>
       <p className="text-gray-700 mb-4">
@@ -51,6 +55,8 @@ const Pricing = () => {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 };
 

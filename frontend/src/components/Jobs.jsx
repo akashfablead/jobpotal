@@ -72,8 +72,8 @@ import { Navigate } from "react-router-dom";
 const Jobs = () => {
   const { allJobs, searchedQuery } = useSelector((store) => store.job);
   const [filteredJobs, setFilteredJobs] = useState(allJobs);
-  const subscription = localStorage.getItem("hasActiveSubscription");
-  const hasActiveSubscription = subscription === "true";
+  // const subscription = localStorage.getItem("hasActiveSubscription");
+  // const hasActiveSubscription = subscription === "true";
 
   useEffect(() => {
     let filtered = allJobs;
@@ -109,9 +109,9 @@ const Jobs = () => {
     setFilteredJobs(filtered);
   }, [allJobs, searchedQuery]);
 
-  if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" />;
-  }
+  // if (!hasActiveSubscription) {
+  //   return <Navigate to="/subscription" />;
+  // }
   return (
     <div>
       <Navbar />

@@ -12,17 +12,17 @@ const Browse = () => {
   useGetAllJobs();
   const { allJobs } = useSelector((store) => store.job);
   const dispatch = useDispatch();
-  const subscription = localStorage.getItem("hasActiveSubscription");
-  const hasActiveSubscription = subscription === "true";
+  // const subscription = localStorage.getItem("hasActiveSubscription");
+  // const hasActiveSubscription = subscription === "true";
 
   useEffect(() => {
     return () => {
       dispatch(setSearchedQuery(""));
     };
   }, []);
-  if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" />;
-  }
+  // if (!hasActiveSubscription) {
+  //   return <Navigate to="/subscription" />;
+  // }
   return (
     <div>
       <Navbar />

@@ -275,8 +275,8 @@ const JobDescription = () => {
   const params = useParams();
   const jobId = params.id;
   const dispatch = useDispatch();
-  const subscription = localStorage.getItem("hasActiveSubscription");
-  const hasActiveSubscription = subscription === "true";
+  // const subscription = localStorage.getItem("hasActiveSubscription");
+  // const hasActiveSubscription = subscription === "true";
 
   const applyJobHandler = async () => {
     try {
@@ -347,9 +347,9 @@ const JobDescription = () => {
     fetchSimilarJobs();
   }, [jobId, singleJob?.title]);
 
-  if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" />;
-  }
+  // if (!hasActiveSubscription) {
+  //   return <Navigate to="/subscription" />;
+  // }
   return (
     <div>
       <Navbar />

@@ -76,12 +76,11 @@ const appRouter = createBrowserRouter([
     element: <Profile />,
   },
 
-  
   {
     path: "/subscription/thank-you",
     element: <ThankYouPage />,
   },
-  
+
   {
     path: "/subscription/cancel",
     element: <CancelSubscriptionModal />,
