@@ -26,6 +26,8 @@ import Resources from "./components/pages/Resources";
 import Pricing from "./components/pages/Pricing";
 import About from "./components/pages/About";
 import Contact from "./components/pages/Contact";
+import ProficesavedJobs from "./components/proficesavejobds";
+
 const appRouter = createBrowserRouter([
   {
     path: "/",
@@ -75,20 +77,35 @@ const appRouter = createBrowserRouter([
     path: "/profile",
     element: <Profile />,
   },
-
+  {
+    path: "/savedjobs",
+    element: <ProficesavedJobs />,
+  },
   {
     path: "/subscription/thank-you",
-    element: <ThankYouPage />,
+    element: (
+      <ProtectedRoute>
+        <ThankYouPage />
+      </ProtectedRoute>
+    ),
   },
 
   {
     path: "/subscription/cancel",
-    element: <CancelSubscriptionModal />,
+    element: (
+      <ProtectedRoute>
+        <CancelSubscriptionModal />
+      </ProtectedRoute>
+    ),
   },
   // admin ke liye yha se start hoga
   {
     path: "/subscription",
-    element: <SubscriptionPlans />,
+    element: (
+      <ProtectedRoute>
+        <SubscriptionPlans />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/admin/companies",

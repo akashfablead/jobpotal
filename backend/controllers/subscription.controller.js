@@ -11,23 +11,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-// const SUBSCRIPTION_PRICES = {
-//     monthly: {
-//         price: 999,
-//         months: 1,
-//         methods: ['card', 'paypal']
-//     },
-//     semi_annual: {
-//         price: 4999,
-//         months: 6,
-//         methods: ['card', 'paypal', 'google_pay']
-//     },
-//     annual: {
-//         price: 8999,
-//         months: 12,
-//         methods: ['card', 'paypal', 'google_pay', 'apple_pay']
-//     }
-// };
 
 const SUBSCRIPTION_PRICES = {
   monthly: {
@@ -46,105 +29,6 @@ const SUBSCRIPTION_PRICES = {
     methods: ['card']
   }
 };
-
-// export const createSubscription = async (req, res) => {
-//     try {
-//         const { planType } = req.body;
-//         const userId = req.id;
-
-//         if (!SUBSCRIPTION_PRICES[planType]) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Invalid plan type"
-//             });
-//         }
-
-//         // Create Stripe payment session with plan-specific payment methods
-//         const session = await stripe.checkout.sessions.create({
-//             payment_method_types: SUBSCRIPTION_PRICES[planType].methods,
-//             mode: 'payment',
-//             line_items: [{
-//                 price_data: {
-//                     currency: 'inr',
-//                     product_data: {
-//                         name: `${planType} Subscription`,
-//                     },
-//                     unit_amount: SUBSCRIPTION_PRICES[planType].price,
-//                 },
-//                 quantity: 1,
-//             }],
-//             success_url: `${process.env.CLIENT_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-//             cancel_url: `${process.env.CLIENT_URL}/subscription/cancel`,
-//         });
-
-//         // ...existing code...
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "Error creating subscription"
-//         });
-//     }
-// };
-// export const createSubscription = async (req, res) => {
-//     try {
-//         console.log('Request body:', req.body);
-//         console.log('Available plans:', Object.keys(SUBSCRIPTION_PRICES));
-//         const { planType } = req.body;
-//         const userId = req.id;
-
-//         if (!SUBSCRIPTION_PRICES[planType]) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: "Invalid plan type"
-//             });
-//         }
-
-//         // Create Stripe payment session with plan-specific payment methods
-//         const session = await stripe.checkout.sessions.create({
-//             payment_method_types: SUBSCRIPTION_PRICES[planType].methods,
-//             mode: 'payment',
-//             line_items: [{
-//                 price_data: {
-//                     currency: 'inr',
-//                     product_data: {
-//                         name: `${planType} Subscription`,
-//                     },
-//                     unit_amount: SUBSCRIPTION_PRICES[planType].price,
-//                 },
-//                 quantity: 1,
-//             }],
-//             success_url: `${process.env.CLIENT_URL}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
-//             cancel_url: `${process.env.CLIENT_URL}/subscription/cancel`,
-//         });
-
-//         // Create subscription record in database
-//         const subscription = await Subscription.create({
-//             userId,
-//             planType,
-//             amount: SUBSCRIPTION_PRICES[planType].price,
-//             duration: SUBSCRIPTION_PRICES[planType].months,
-//             stripeSubscriptionId: session.id,
-//             status: 1 // 1 for active, 0 for cancelled
-//         });
-
-//         return res.status(200).json({
-//             success: true,
-//             message: "Subscription initiated",
-//             data: {
-//                 sessionId: session.id,
-//                 subscriptionId: subscription._id,
-//                 url: session.url
-//             }
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         return res.status(500).json({
-//             success: false,
-//             message: "Error creating subscription"
-//         });
-//     }
-// };
 
 export const createSubscription = async (req, res) => {
   try {
@@ -237,30 +121,87 @@ export const createSubscription = async (req, res) => {
   }
 };
 
+// export const verifySubscription = async (req, res) => {
+//   try {
+//     const { sessionId } = req.params;
+
+//     const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+//     if (session.payment_status === 'paid') {
+//       // Update subscription status to completed
+//       await Subscription.findOneAndUpdate(
+//         { stripeSubscriptionId: sessionId },
+//         { status: 2 }
+//       );
+
+//       await sendSubscriptionEmail(customerInfo.email, {
+//         planType,
+//         amount: SUBSCRIPTION_PRICES[planType].price,
+//         duration: SUBSCRIPTION_PRICES[planType].months,
+//         sessionId: session.id,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: "Payment successful"
+//       });
+//     }
+
+//     return res.status(400).json({
+//       success: false,
+//       message: "Payment not completed"
+//     });
+//   } catch (error) {
+//     console.error(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Error verifying payment"
+//     });
+//   }
+// };
+
 
 export const verifySubscription = async (req, res) => {
   try {
     const { sessionId } = req.params;
 
+    // Retrieve the session from Stripe
     const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (!session) {
+      return res.status(404).json({
+        success: false,
+        message: "Session not found"
+      });
+    }
 
     if (session.payment_status === 'paid') {
       // Update subscription status to completed
-      await Subscription.findOneAndUpdate(
+      const subscription = await Subscription.findOneAndUpdate(
         { stripeSubscriptionId: sessionId },
-        { status: 2 }
+        { status: 2 },
+        { new: true } // Return the updated document
       );
 
-      await sendSubscriptionEmail(customerInfo.email, {
-        planType,
-        amount: SUBSCRIPTION_PRICES[planType].price,
-        duration: SUBSCRIPTION_PRICES[planType].months,
+      if (!subscription) {
+        return res.status(404).json({
+          success: false,
+          message: "Subscription not found"
+        });
+      }
+
+      // Send subscription confirmation email
+      await sendSubscriptionEmail(subscription.customerInfo.email, {
+        planType: subscription.planType,
+        amount: subscription.amount,
+        duration: subscription.duration,
         sessionId: session.id,
       });
 
       return res.status(200).json({
         success: true,
-        message: "Payment successful"
+        message: "Payment successful",
+        data: subscription
       });
     }
 
@@ -269,7 +210,7 @@ export const verifySubscription = async (req, res) => {
       message: "Payment not completed"
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error verifying payment:', error);
     return res.status(500).json({
       success: false,
       message: "Error verifying payment"
@@ -309,50 +250,6 @@ export const cancelSubscription = async (req, res) => {
     });
   }
 };
-
-// export const sendSubscriptionEmail = async (email, subscriptionDetails) => {
-//     const mailOptions = {
-//         from: process.env.EMAIL_USER,
-//         to: email,
-//         subject: 'Subscription Confirmation',
-//         html: `
-//             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; background-color: #f4f4f4; border-radius: 10px; border: 1px solid #ddd;">
-//                 <table width="100%" cellpadding="0" cellspacing="0">
-//                     <tr>
-//                         <td style="text-align: center; padding: 20px 0;">
-//                             <h1 style="color: #007BFF; margin: 0;">Subscription Confirmed</h1>
-//                         </td>
-//                     </tr>
-//                     <tr>
-//                         <td style="background-color: #ffffff; padding: 30px; border-radius: 8px;">
-//                             <p style="font-size: 16px; color: #333;">
-//                                 Hello,
-//                             </p>
-//                             <p style="font-size: 16px; color: #333;">
-//                                 Thank you for subscribing! Here are your subscription details:
-//                             </p>
-//                             <ul style="font-size: 16px; color: #333; padding-left: 20px;">
-//                                 <li><strong>Plan Type:</strong> ${subscriptionDetails.planType}</li>
-//                                 <li><strong>Amount:</strong> ${subscriptionDetails.amount}</li>
-//                                 <li><strong>Duration:</strong> ${subscriptionDetails.duration} months</li>
-//                             </ul>
-//                             <p style="text-align: center; margin-top: 30px;">
-//                                 <a href="/" style="display: inline-block; padding: 12px 25px; background-color: #007BFF; color: #ffffff; text-decoration: none; border-radius: 5px; font-size: 16px;">Visit Website</a>
-//                             </p>
-//                         </td>
-//                     </tr>
-//                     <tr>
-//                         <td style="text-align: center; padding: 20px; font-size: 12px; color: #777;">
-//                             © ${new Date().getFullYear()} Your Company Name. All rights reserved.
-//                         </td>
-//                     </tr>
-//                 </table>
-//             </div>
-//         `,
-//     };
-
-//     await transporter.sendMail(mailOptions);
-// };
 
 const sendSubscriptionEmail = async (email, subscriptionDetails) => {
   const mailOptions = {

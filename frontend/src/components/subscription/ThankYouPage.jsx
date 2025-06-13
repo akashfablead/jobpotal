@@ -21,7 +21,13 @@ const ThankYouPage = () => {
           );
           if (response.data.success) {
             setSubscriptionData(response.data);
-            
+
+            // Store the status in localStorage
+            localStorage.setItem(
+              "subscriptionStatus",
+              response.data.data.status
+            );
+            console.log(response.data.data.status);
           }
         }
       } catch (error) {
@@ -31,7 +37,6 @@ const ThankYouPage = () => {
 
     fetchSubscriptionData();
   }, [sessionId]);
-
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 px-4 py-16">
