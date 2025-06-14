@@ -147,10 +147,9 @@ export const login = async (req, res) => {
                     email: user.email,
                     phoneNumber: user.phoneNumber,
                     role: user.role,
-                    // profile: user.profile,
-                    // Use the uploaded or Google profile picture
                     profilePhoto: user.profile.profilePhoto,
                 },
+                token: authToken,
                 success: true,
             });
         }
@@ -158,7 +157,7 @@ export const login = async (req, res) => {
         // Handle regular login
         if (!email || !password || !role) {
             return res.status(400).json({
-                message: "Something is missing",
+                message: "Something is missing in the request. Please provide email, password and role.",
                 success: false,
             });
         }
@@ -199,6 +198,7 @@ export const login = async (req, res) => {
             phoneNumber: user.phoneNumber,
             role: user.role,
             profile: user.profile,
+            token
         };
 
         return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: "strict" }).json({

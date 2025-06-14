@@ -56,7 +56,8 @@ const jobSchema = new mongoose.Schema({
             },
             status: {
                 type: Number,
-                default: 1 // 1 for active, 0 for inactive
+                enum: [0, 1],
+                default: 0
             }
         }
     ]

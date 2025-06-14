@@ -5,6 +5,7 @@ import { Avatar, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { JOB_API_END_POINT } from "@/utils/constant";
 
 const Job = ({ job }) => {
   const navigate = useNavigate();
@@ -13,29 +14,47 @@ const Job = ({ job }) => {
 
   useEffect(() => {
     // Check if job is saved by the current user
+    // const checkIfSaved = async () => {
+    //   try {
+    //     const token = localStorage.getItem("token");
+    //     if (!token) return;
+
+    //     const response = await axios.get(
+    //       `${import.meta.env.VITE_API_URL}/api/v1/job/saved`,
+    //       {
+    //         headers: {
+    //           Authorization: `Bearer ${token}`,
+    //         },
+    //       }
+    //     );
+
+    //     if (response.data.success) {
+    //       // const savedJobs = response.data.jobs;
+    //       // const isJobSaved = savedJobs.some(
+    //       //   (savedJob) => savedJob._id === job._id
+    //       // );
+
+    //     }
+    //   } catch (error) {
+    //     console.error("Error checking saved status:", error);
+    //   }
+    // };
     const checkIfSaved = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+        const res = await axios.get(`${JOB_API_END_POINT}/saved`, {
+          withCredentials: true,
+        });
 
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/v1/job/saved`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.data.success) {
-          // const savedJobs = response.data.jobs;
-          // const isJobSaved = savedJobs.some(
-          //   (savedJob) => savedJob._id === job._id
-          // );
-          setIsSaved(isJobSaved);
+        // ✅ Check for status and job list
+        if (res.data.status === "success" && res.data.success) {
+          setIsSaved(
+            !isSaved && res.data.jobs.some((job) => job._id === job._id)
+          );
         }
-      } catch (error) {
-        console.error("Error checking saved status:", error);
+      } catch (err) {
+        console.error("Error fetching saved jobs:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -52,18 +71,24 @@ const Job = ({ job }) => {
   const handleSaveJob = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) {
-        return;
-      }
 
-      const status = isSaved ? 0 : 1;
+      // if (!localStorage.getItem("token")) {
+      //   navigate("/login");
+      //   return;
+      // }
+
+      // const formData = new FormData();
+      // formData.append("status", isSaved ? 0 : 1);
+
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/v1/job/save/${job._id}`,
-        { status },
+        `${JOB_API_END_POINT}/save/${job._id}`,
         {
+          status: isSaved ? 0 : 1,
+        },
+        {
+          withCredentials: true,
           headers: {
-            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -131,13 +156,13 @@ const Job = ({ job }) => {
         >
           Details
         </Button>
-        <Button
+        {/* <Button
           className={`${isSaved ? "bg-blue-500" : "bg-[#7209b7]"}`}
           onClick={handleSaveJob}
           disabled={isLoading}
         >
           {isSaved ? "Saved" : "Save For Later"}
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { Job } from "../models/job.model.js";
+import mongoose from "mongoose";
 
 // admin post krega job
 export const postJob = async (req, res) => {
@@ -340,52 +341,113 @@ export const getSimilarJobs = async (req, res) => {
 
 export const saveJob = async (req, res) => {
     try {
-        const jobId = req.params.id;
-        const userId = req.id;
-        const { status } = req.body; // 1 for active, 0 for inactive
+        const jobId = req.params.id; // ✅ FIXED HERE
+        const { userId, status } = req.body;
 
-        // Find the job
+        if (![0, 1].includes(status)) {
+            return res.status(400).json({
+                message: "Invalid status value. Must be 0 or 1.",
+                success: false,
+            });
+        }
+
+        // Check if jobId is a valid ObjectId
+        if (!mongoose.Types.ObjectId.isValid(jobId)) {
+            return res.status(400).json({
+                message: "Invalid Job ID format",
+                success: false,
+            });
+        }
+
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({
                 message: "Job not found",
                 success: false,
-                status: "error"
             });
         }
 
-        // Check if user has already saved this job
-        const existingSaveIndex = job.savedJobs.findIndex(
-            save => save.user.toString() === userId
+        const existingSavedJob = job.savedJobs.find(
+            (item) => item.user.toString() === userId
         );
 
-        if (existingSaveIndex !== -1) {
-            // Update existing save status
-            job.savedJobs[existingSaveIndex].status = status;
+        if (existingSavedJob) {
+            await Job.updateOne(
+                { _id: jobId, "savedJobs.user": userId },
+                { $set: { "savedJobs.$.status": status } }
+            );
         } else {
-            // Add new save
-            job.savedJobs.push({
-                user: userId,
-                status: status
-            });
+            await Job.updateOne(
+                { _id: jobId },
+                { $push: { savedJobs: { user: userId, status } } }
+            );
         }
 
-        await job.save();
-
+        const updatedJob = await Job.findById(jobId);
         return res.status(200).json({
-            message: status === 1 ? "Job saved successfully" : "Job unsaved successfully",
+            message: "Saved job status updated successfully.",
             success: true,
-            status: "success"
+            job: updatedJob,
         });
     } catch (error) {
-        console.log(error);
+        console.error("Error updating saved job:", error);
         return res.status(500).json({
-            message: "Internal server error",
+            message: "Server error while updating saved job.",
             success: false,
-            status: "error"
         });
     }
 };
+
+
+
+// export const saveJob = async (req, res) => {
+//     try {
+//         const jobId = req.params.id;
+//         const userId = req.id;
+//         const { status } = req.body; // 1 for active, 0 for inactive
+
+//         // Find the job
+//         const job = await Job.findById(jobId);
+//         if (!job) {
+//             return res.status(404).json({
+//                 message: "Job not found",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         // Check if user has already saved this job
+//         const existingSaveIndex = job.savedJobs.findIndex(
+//             save => save.user.toString() === userId
+//         );
+
+//         if (existingSaveIndex !== -1) {
+//             // Update existing save status
+//             job.savedJobs[existingSaveIndex].status = status;
+//         } else {
+//             // Add new save
+//             job.savedJobs.push({
+//                 user: userId,
+//                 status: status
+//             });
+//         }
+
+//         await job.save();
+
+//         return res.status(200).json({
+//             message: status === 1 ? "Job saved successfully" : "Job unsaved successfully",
+//             success: true,
+//             status: "success"
+//         });
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             message: "Internal server error",
+//             success: false,
+//             status: "error"
+//         });
+//     }
+// };
 
 export const getSavedJobs = async (req, res) => {
     try {
@@ -405,6 +467,52 @@ export const getSavedJobs = async (req, res) => {
 
         return res.status(200).json({
             jobs: savedJobs,
+            success: true,
+            status: "success"
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            message: "Internal server error",
+            success: false,
+            status: "error"
+        });
+    }
+};
+
+export const unsaveJob = async (req, res) => {
+    try {
+        const jobId = req.params.id;
+        const userId = req.id;
+
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return res.status(404).json({
+                message: "Job not found",
+                success: false,
+                status: "error"
+            });
+        }
+
+        const originalLength = job.savedJobs.length;
+
+        // Remove the saved job entry for the current user
+        job.savedJobs = job.savedJobs.filter(
+            save => save.user.toString() !== userId
+        );
+
+        if (job.savedJobs.length === originalLength) {
+            return res.status(404).json({
+                message: "Saved job not found for this user",
+                success: false,
+                status: "error"
+            });
+        }
+
+        await job.save();
+
+        return res.status(200).json({
+            message: "Job unsaved successfully",
             success: true,
             status: "success"
         });

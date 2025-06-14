@@ -6,7 +6,10 @@ import { RadioGroup } from "../ui/radio-group";
 import { Button } from "../ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { USER_API_END_POINT, USER_API_GOOGLE_END_POINT } from "@/utils/constant";
+import {
+  USER_API_END_POINT,
+  USER_API_GOOGLE_END_POINT,
+} from "@/utils/constant";
 import { toast } from "sonner";
 import { useDispatch, useSelector } from "react-redux";
 import { setLoading, setUser } from "@/redux/authSlice";
@@ -198,8 +201,10 @@ const Login = () => {
         if (hasSubscription) {
           navigate("/admin/companies");
           toast.success(`Welcome back, ${userData.fullname}`);
+          localStorage.setItem("token", res.data.token);
         } else {
           navigate("/subscription");
+          localStorage.setItem("token", res.data.token);
         }
       } else {
         if (hasSubscription) {
@@ -226,6 +231,7 @@ const Login = () => {
 
       if (res.data.success) {
         await handleLoginSuccess(res.data.user);
+        localStorage.setItem("token", res.data.token);
       }
     } catch (error) {
       console.error(error);
