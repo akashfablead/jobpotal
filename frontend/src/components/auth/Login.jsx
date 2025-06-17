@@ -201,10 +201,10 @@ const Login = () => {
         if (hasSubscription) {
           navigate("/admin/companies");
           toast.success(`Welcome back, ${userData.fullname}`);
-          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("user_id", res.data.user._id);
         } else {
           navigate("/subscription");
-          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("user_id", res.data.user._id);
         }
       } else {
         if (hasSubscription) {
@@ -231,7 +231,7 @@ const Login = () => {
 
       if (res.data.success) {
         await handleLoginSuccess(res.data.user);
-        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("user_id", res.data.user._id);
       }
     } catch (error) {
       console.error(error);
@@ -252,6 +252,7 @@ const Login = () => {
 
       if (res.data.success) {
         await handleLoginSuccess(res.data.user);
+        localStorage.setItem("user_id", res.data.user._id);
       }
     } catch (error) {
       console.error(error);

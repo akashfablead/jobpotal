@@ -27,6 +27,7 @@ import Pricing from "./components/pages/Pricing";
 import About from "./components/pages/About";
 import Contact from "./components/pages/Contact";
 import ProficesavedJobs from "./components/proficesavejobds";
+import UpdateProfilePage from "./components/UpdateProfileDialog";
 
 const appRouter = createBrowserRouter([
   {
@@ -76,6 +77,10 @@ const appRouter = createBrowserRouter([
   {
     path: "/profile",
     element: <Profile />,
+  },
+  {
+    path: "/updateprofile",
+    element: <UpdateProfilePage />,
   },
   {
     path: "/savedjobs",

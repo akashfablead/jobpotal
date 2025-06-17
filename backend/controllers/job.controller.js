@@ -341,7 +341,7 @@ export const getSimilarJobs = async (req, res) => {
 
 export const saveJob = async (req, res) => {
     try {
-        const jobId = req.params.id; // ✅ FIXED HERE
+        const jobId = req.params.id;
         const { userId, status } = req.body;
 
         if (![0, 1].includes(status)) {
@@ -351,7 +351,6 @@ export const saveJob = async (req, res) => {
             });
         }
 
-        // Check if jobId is a valid ObjectId
         if (!mongoose.Types.ObjectId.isValid(jobId)) {
             return res.status(400).json({
                 message: "Invalid Job ID format",
@@ -368,7 +367,7 @@ export const saveJob = async (req, res) => {
         }
 
         const existingSavedJob = job.savedJobs.find(
-            (item) => item.user.toString() === userId
+            (item) => item.user?.toString() === userId
         );
 
         if (existingSavedJob) {
@@ -480,32 +479,97 @@ export const getSavedJobs = async (req, res) => {
     }
 };
 
+// export const unsaveJob = async (req, res) => {
+//     try {
+//         const jobId = req.params.id;
+//         const userId = req.id;
+
+//         const job = await Job.findById(jobId);
+//         if (!job) {
+//             return res.status(404).json({
+//                 message: "Job not found",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         const originalLength = job.savedJobs.length;
+
+//         // Remove the saved job entry for the current user
+//         job.savedJobs = job.savedJobs.filter(
+//             save => save.user.toString() !== userId
+//         );
+
+//         if (job.savedJobs.length === originalLength) {
+//             return res.status(404).json({
+//                 message: "Saved job not found for this user",
+//                 success: false,
+//                 status: "error"
+//             });
+//         }
+
+//         await job.save();
+
+//         return res.status(200).json({
+//             message: "Job unsaved successfully",
+//             success: true,
+//             status: "success"
+//         });
+//     } catch (error) {
+//         console.log(error);
+//         return res.status(500).json({
+//             message: "Internal server error",
+//             success: false,
+//             status: "error"
+//         });
+//     }
+// };
+
+
 export const unsaveJob = async (req, res) => {
     try {
         const jobId = req.params.id;
         const userId = req.id;
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(jobId)) {
+            return res.status(400).json({
+                message: "Invalid job ID",
+                success: false,
+                status: "error",
+            });
+        }
 
         const job = await Job.findById(jobId);
         if (!job) {
             return res.status(404).json({
                 message: "Job not found",
                 success: false,
-                status: "error"
+                status: "error",
+            });
+        }
+
+        if (!Array.isArray(job.savedJobs)) {
+            return res.status(500).json({
+                message: "Invalid savedJobs format",
+                success: false,
+                status: "error",
             });
         }
 
         const originalLength = job.savedJobs.length;
 
-        // Remove the saved job entry for the current user
-        job.savedJobs = job.savedJobs.filter(
-            save => save.user.toString() !== userId
-        );
+        // Check for missing `.user` fields
+        job.savedJobs = job.savedJobs.filter(save => {
+            if (!save.user) return true;
+            return save.user.toString() !== userId;
+        });
 
         if (job.savedJobs.length === originalLength) {
             return res.status(404).json({
                 message: "Saved job not found for this user",
                 success: false,
-                status: "error"
+                status: "error",
             });
         }
 
@@ -514,14 +578,15 @@ export const unsaveJob = async (req, res) => {
         return res.status(200).json({
             message: "Job unsaved successfully",
             success: true,
-            status: "success"
+            status: "success",
         });
     } catch (error) {
-        console.log(error);
+        console.error("UnsaveJob Error:", error.message, error.stack);
         return res.status(500).json({
             message: "Internal server error",
             success: false,
-            status: "error"
+            status: "error",
+            error: error.message,
         });
     }
 };

@@ -2,13 +2,14 @@ import React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Avatar, AvatarImage } from "../ui/avatar";
-import { LogOut, User2 } from "lucide-react";
+import { Bookmark, LogOut, User2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { USER_API_END_POINT } from "@/utils/constant";
 import { setUser } from "@/redux/authSlice";
 import { toast } from "sonner";
+import logo from "../../assets/logo.png";
 
 const Navbar = () => {
   const { user } = useSelector((store) => store.auth);
@@ -35,10 +36,17 @@ const Navbar = () => {
     <div className="bg-white">
       <div className="flex items-center justify-between mx-auto max-w-7xl h-16">
         <div>
-          <Link to="/">
+          {/* <Link to="/">
             <h1 className="text-2xl font-bold">
               Job<span className="text-[#F83002]">Portal</span>
             </h1>
+          </Link> */}
+          <Link to="/" className="flex items-center gap-2">
+            <img
+              src={logo}
+              alt="WorkVista Logo"
+              className="object-cover w-40 h-40"
+            />
           </Link>
         </div>
         <div className="flex items-center gap-12">
@@ -121,7 +129,7 @@ const Navbar = () => {
                         </div>
 
                         <div className="flex w-fit items-center gap-2 cursor-pointer">
-                          <User2 />
+                          <Bookmark />
                           <Button variant="link">
                             {" "}
                             <Link to="/savedjobs">Save Jobs</Link>
