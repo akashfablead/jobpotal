@@ -121,14 +121,6 @@ const appRouter = createBrowserRouter([
     ),
   },
   {
-    path: "/subscription/thank-you",
-    element: (
-      <ProtectedRoute>
-        <ThankYouPage />
-      </ProtectedRoute>
-    ),
-  },
-  {
     path: "/admin/companies/create",
     element: (
       <ProtectedRoute>

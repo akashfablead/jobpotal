@@ -225,61 +225,140 @@ export const logout = async (req, res) => {
 
 // export const updateProfile = async (req, res) => {
 //     try {
-//         const { fullname, email, phoneNumber, bio, skills } = req.body;
+//         const {
+//             fullname,
+//             email,
+//             phoneNumber,
+//             bio,
+//             skills,
+//             user_type,
+//             gender,
+//             dob,
+//             location,
+//             linkedin_url,
+//             portfolio_url,
+//             about_me,
+//             preferred_job_types,
+//             preferred_locations,
+//             applied_jobs,
+//             saved_jobs,
+//         } = req.body;
 
 //         const file = req.file;
-//         // cloudinary ayega idhar
-//         const fileUri = getDataUri(file);
-//         const cloudResponse = await cloudinary.uploader.upload(fileUri.content);
+//         let cloudResponse;
 
-
-//         let skillsArray;
-//         if (skills) {
-//             skillsArray = skills.split(",");
+//         // Handle file upload if a file is present
+//         if (file) {
+//             const fileUri = getDataUri(file);
+//             if (!fileUri) {
+//                 return res.status(400).json({
+//                     message: "Invalid file format.",
+//                     success: false,
+//                 });
+//             }
+//             cloudResponse = await cloudinary.uploader.upload(fileUri.content);
 //         }
-//         const userId = req.id; // middleware authentication
+
+//         const userId = req.id; // Set by middleware
 //         let user = await User.findById(userId);
 
 //         if (!user) {
-//             return res.status(400).json({
+//             return res.status(404).json({
 //                 message: "User not found.",
-//                 success: false
-//             })
+//                 success: false,
+//             });
 //         }
-//         // updating data
-//         if (fullname) user.fullname = fullname
-//         if (email) user.email = email
-//         if (phoneNumber) user.phoneNumber = phoneNumber
-//         if (bio) user.profile.bio = bio
-//         if (skills) user.profile.skills = skillsArray
 
-//         // resume comes later here...
+//         // Update user fields
+//         if (fullname) user.fullname = fullname;
+//         if (email) user.email = email;
+//         if (phoneNumber) user.mobile_no = phoneNumber;
+//         if (user_type) user.user_type = user_type;
+//         if (gender) user.gender = gender;
+//         if (dob) user.dob = new Date(dob);
+//         if (location) user.location = location;
+//         if (linkedin_url) user.profile.linkedin_url = linkedin_url;
+//         if (portfolio_url) user.profile.portfolio_url = portfolio_url;
+//         if (about_me) user.profile.about_me = about_me;
+//         if (preferred_job_types) user.profile.preferred_job_types = preferred_job_types;
+//         if (preferred_locations) user.profile.preferred_locations = preferred_locations;
+//         if (applied_jobs) user.applied_jobs = applied_jobs;
+//         if (saved_jobs) user.saved_jobs = saved_jobs;
+//         if (bio) user.profile.bio = bio;
+//         if (skills) user.profile.skills = skills;
+
+//         // Parse experience and education from req.body
+//         const experience = [];
+//         const education = [];
+
+//         // Extract experience data
+//         Object.keys(req.body).forEach((key) => {
+//             const experienceMatch = key.match(/experience\[(\d+)\]\[(\w+)\]/);
+//             if (experienceMatch) {
+//                 const index = experienceMatch[1];
+//                 const field = experienceMatch[2];
+
+//                 if (!experience[index]) {
+//                     experience[index] = {};
+//                 }
+//                 experience[index][field] = req.body[key];
+//             }
+//         });
+
+//         // Extract education data
+//         Object.keys(req.body).forEach((key) => {
+//             const educationMatch = key.match(/education\[(\d+)\]\[(\w+)\]/);
+//             if (educationMatch) {
+//                 const index = educationMatch[1];
+//                 const field = educationMatch[2];
+
+//                 if (!education[index]) {
+//                     education[index] = {};
+//                 }
+//                 education[index][field] = req.body[key];
+//             }
+//         });
+
+//         // Update experience and education if they were parsed
+//         if (experience.length > 0) {
+//             user.profile.experience = experience;
+//         }
+
+//         if (education.length > 0) {
+//             user.profile.education = education;
+//         }
+
+//         // Handle file upload response
 //         if (cloudResponse) {
-//             user.profile.resume = cloudResponse.secure_url // save the cloudinary url
-//             user.profile.resumeOriginalName = file.originalname // Save the original file name
+//             user.profile.resume_url = cloudResponse.secure_url;
+//             user.profile.resumeOriginalName = file.originalname;
 //         }
-
 
 //         await user.save();
 
-//         user = {
+//         const updatedUser = {
 //             _id: user._id,
 //             fullname: user.fullname,
 //             email: user.email,
-//             phoneNumber: user.phoneNumber,
-//             role: user.role,
-//             profile: user.profile
-//         }
+//             mobile_no: user.mobile_no,
+//             user_type: user.user_type,
+//             profile: user.profile,
+//         };
 
 //         return res.status(200).json({
 //             message: "Profile updated successfully.",
-//             user,
-//             success: true
-//         })
+//             user: updatedUser,
+//             success: true,
+//         });
 //     } catch (error) {
-//         console.log(error);
+//         console.error(error);
+//         return res.status(500).json({
+//             message: "An error occurred while updating the profile.",
+//             error: error.message,
+//             success: false,
+//         });
 //     }
-// }
+// };
 
 export const updateProfile = async (req, res) => {
     try {
@@ -293,15 +372,13 @@ export const updateProfile = async (req, res) => {
             gender,
             dob,
             location,
-            education,
-            experience,
             linkedin_url,
             portfolio_url,
             about_me,
             preferred_job_types,
             preferred_locations,
             applied_jobs,
-            saved_jobs
+            saved_jobs,
         } = req.body;
 
         const file = req.file;
@@ -313,25 +390,19 @@ export const updateProfile = async (req, res) => {
             if (!fileUri) {
                 return res.status(400).json({
                     message: "Invalid file format.",
-                    success: false
+                    success: false,
                 });
             }
             cloudResponse = await cloudinary.uploader.upload(fileUri.content);
         }
 
-        // Process skills into an array
-        let skillsArray = [];
-        if (skills) {
-            skillsArray = skills.split(",");
-        }
-
-        const userId = req.id; // Assuming this is set by middleware during authentication
+        const userId = req.id; // Set by middleware
         let user = await User.findById(userId);
 
         if (!user) {
             return res.status(404).json({
                 message: "User not found.",
-                success: false
+                success: false,
             });
         }
 
@@ -343,38 +414,64 @@ export const updateProfile = async (req, res) => {
         if (gender) user.gender = gender;
         if (dob) user.dob = new Date(dob);
         if (location) user.location = location;
-
-        // Validate and update education
-        if (education) {
-            if (!Array.isArray(education)) {
-                return res.status(400).json({
-                    message: "Education must be an array of objects.",
-                    success: false
-                });
-            }
-            user.profile.education = education;
-        }
-
-        // Validate and update experience
-        if (experience) {
-            if (!Array.isArray(experience)) {
-                return res.status(400).json({
-                    message: "Experience must be an array of objects.",
-                    success: false
-                });
-            }
-            user.profile.experience = experience;
-        }
-
         if (linkedin_url) user.profile.linkedin_url = linkedin_url;
         if (portfolio_url) user.profile.portfolio_url = portfolio_url;
         if (about_me) user.profile.about_me = about_me;
         if (preferred_job_types) user.profile.preferred_job_types = preferred_job_types;
         if (preferred_locations) user.profile.preferred_locations = preferred_locations;
-        if (applied_jobs) user.profile.applied_jobs = applied_jobs;
-        if (saved_jobs) user.profile.saved_jobs = saved_jobs;
+        if (applied_jobs) user.applied_jobs = applied_jobs;
+        if (saved_jobs) user.saved_jobs = saved_jobs;
         if (bio) user.profile.bio = bio;
-        if (skills) user.profile.skills = skillsArray;
+        if (skills) user.profile.skills = skills;
+
+        // Initialize arrays to hold parsed experience and education data
+        const experience = [];
+        const education = [];
+
+        // Parse experience data from req.body
+        Object.keys(req.body).forEach((key) => {
+            const experienceMatch = key.match(/experience\[(\d+)\]\[(\w+)\]/);
+            if (experienceMatch) {
+                const index = parseInt(experienceMatch[1]);
+                const field = experienceMatch[2];
+
+                if (!experience[index]) {
+                    experience[index] = {};
+                }
+                experience[index][field === 'title' ? 'job_title' : field] = req.body[key];
+            }
+        });
+
+        // Parse education data from req.body
+        Object.keys(req.body).forEach((key) => {
+            const educationMatch = key.match(/education\[(\d+)\]\[(\w+)\]/);
+            if (educationMatch) {
+                const index = parseInt(educationMatch[1]);
+                const field = educationMatch[2];
+
+                if (!education[index]) {
+                    education[index] = {};
+                }
+                education[index][field] = req.body[key];
+            }
+        });
+
+        // Update experience and education if they were parsed
+        if (experience.length > 0) {
+            user.profile.experience = experience.map(exp => ({
+                job_title: exp.job_title,
+                company: exp.company,
+                years: exp.years
+            }));
+        }
+
+        if (education.length > 0) {
+            user.profile.education = education.map(edu => ({
+                degree: edu.degree,
+                institute: edu.institute,
+                year: edu.year
+            }));
+        }
 
         // Handle file upload response
         if (cloudResponse) {
@@ -384,34 +481,29 @@ export const updateProfile = async (req, res) => {
 
         await user.save();
 
-        // Prepare the user object to return
         const updatedUser = {
             _id: user._id,
             fullname: user.fullname,
             email: user.email,
             mobile_no: user.mobile_no,
             user_type: user.user_type,
-            profile: user.profile
+            profile: user.profile,
         };
 
         return res.status(200).json({
             message: "Profile updated successfully.",
             user: updatedUser,
-            success: true
+            success: true,
         });
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             message: "An error occurred while updating the profile.",
-            error: error.message, // Include the error message for debugging
-            success: false
+            error: error.message,
+            success: false,
         });
     }
 };
-
-
-
-
 
 export const googleAuth = async (req, res) => {
     try {

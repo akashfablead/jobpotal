@@ -19,9 +19,6 @@
 
 //   const checkIfSaved = async () => {
 //     try {
-//       const formData = new FormData();
-//       formData.append("userId", user_id);
-
 //       const res = await axios.get(`${JOB_API_END_POINT}/saved`, {
 //         withCredentials: true,
 //       });
@@ -47,15 +44,6 @@
 //   const handleSaveJob = async () => {
 //     try {
 //       setIsLoading(true);
-
-//       // if (!localStorage.getItem("token")) {
-//       //   navigate("/login");
-//       //   return;
-//       // }
-
-//       // const formData = new FormData();
-//       // formData.append("status", isSaved ? 0 : 1);
-
 //       const response = await axios.post(
 //         `${JOB_API_END_POINT}/save/${job._id}`,
 //         {
@@ -81,9 +69,10 @@
 //   };
 
 //   return (
-//     <div className="p-5 rounded-md shadow-xl bg-white border border-gray-100">
-//       <div className="flex items-center justify-between">
-//         <p className="text-sm text-gray-500">
+//     <div className="p-5 rounded-xl shadow-xl bg-white border border-gray-100 w-full">
+//       {/* Header Row */}
+//       <div className="flex items-center justify-between mb-2">
+//         <p className="text-xs sm:text-sm text-gray-500">
 //           {daysAgoFunction(job?.createdAt) === 0
 //             ? "Today"
 //             : `${daysAgoFunction(job?.createdAt)} days ago`}
@@ -99,38 +88,46 @@
 //         </Button>
 //       </div>
 
-//       <div className="flex items-center gap-2 my-2">
+//       {/* Company Info */}
+//       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-3">
 //         <Button className="p-6" variant="outline" size="icon">
 //           <Avatar>
 //             <AvatarImage src={job?.company?.logo} />
 //           </Avatar>
 //         </Button>
 //         <div>
-//           <h1 className="font-medium text-lg">{job?.company?.name}</h1>
-//           <p className="text-sm text-gray-500">India</p>
+//           <h1 className="font-medium text-base sm:text-lg">
+//             {job?.company?.name}
+//           </h1>
+//           <p className="text-xs sm:text-sm text-gray-500">India</p>
 //         </div>
 //       </div>
 
-//       <div>
-//         <h1 className="font-bold text-lg my-2">{job?.title}</h1>
-//         <p className="text-sm text-gray-600">{job?.description}</p>
+//       {/* Job Title & Description */}
+//       <div className="mb-3">
+//         <h1 className="font-bold text-base sm:text-lg mb-1">{job?.title}</h1>
+//         <p className="text-sm text-gray-600 line-clamp-3">{job?.description}</p>
 //       </div>
-//       <div className="flex items-center gap-2 mt-4">
-//         <Badge className={"text-blue-700 font-bold"} variant="ghost">
+
+//       {/* Badges */}
+//       <div className="flex flex-wrap gap-2 mt-2">
+//         <Badge className="text-blue-700 font-bold" variant="ghost">
 //           {job?.position} Positions
 //         </Badge>
-//         <Badge className={"text-[#F83002] font-bold"} variant="ghost">
+//         <Badge className="text-[#F83002] font-bold" variant="ghost">
 //           {job?.jobType}
 //         </Badge>
-//         <Badge className={"text-[#7209b7] font-bold"} variant="ghost">
-//           {job?.salary}LPA
+//         <Badge className="text-[#7209b7] font-bold" variant="ghost">
+//           {job?.salary} LPA
 //         </Badge>
 //       </div>
-//       <div className="flex items-center gap-4 mt-4">
+
+//       {/* View Details Button */}
+//       <div className="mt-4">
 //         <Button
 //           onClick={() => navigate(`/description/${job?._id}`)}
 //           variant="outline"
-//           className="w-full"
+//           className="w-full flex items-center justify-center gap-2 text-sm sm:text-base"
 //         >
 //           <Eye className="w-4 h-4" />
 //           View Details
@@ -142,7 +139,7 @@
 
 // export default Job;
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "./ui/button";
 import { Bookmark, Eye } from "lucide-react";
 import { Avatar, AvatarImage } from "./ui/avatar";
@@ -157,12 +154,9 @@ const Job = ({ job }) => {
   const [isLoading, setIsLoading] = useState(false);
   const user_id = localStorage.getItem("user_id");
 
-  useEffect(() => {
-    checkIfSaved();
-  }, [user_id]);
-
-  const checkIfSaved = async () => {
+  const checkIfSaved = useCallback(async () => {
     try {
+      setIsLoading(true);
       const res = await axios.get(`${JOB_API_END_POINT}/saved`, {
         withCredentials: true,
       });
@@ -176,7 +170,11 @@ const Job = ({ job }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [job._id]);
+
+  useEffect(() => {
+    checkIfSaved();
+  }, [checkIfSaved]);
 
   const daysAgoFunction = (mongodbTime) => {
     const createdAt = new Date(mongodbTime);

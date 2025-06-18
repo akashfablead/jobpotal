@@ -84,7 +84,7 @@ const userSchema = new mongoose.Schema(
             education: [
                 {
                     degree: { type: String },
-                    institution: { type: String },
+                    institute: { type: String },
                     year: { type: Number },
                 },
             ],
@@ -92,7 +92,7 @@ const userSchema = new mongoose.Schema(
                 {
                     job_title: { type: String },
                     company: { type: String },
-                    duration: { type: String },
+                    years: { type: String },
                 },
             ],
             linkedin_url: { type: String },

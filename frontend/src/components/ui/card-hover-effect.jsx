@@ -9,7 +9,10 @@ export const HoverEffect = ({ items, className }) => {
 
   return (
     <div
-      className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 py-10", className)}
+      className={cn(
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 py-10",
+        className
+      )}
     >
       {items.map((job, idx) => (
         <Link
@@ -42,13 +45,17 @@ export const HoverEffect = ({ items, className }) => {
               <h1 className="text-xl font-semibold text-gray-800">
                 {job?.company?.name}
               </h1>
-              <p className="text-sm text-gray-500">📍 {job?.location || "India"}</p>
+              <p className="text-sm text-gray-500">
+                📍 {job?.location || "India"}
+              </p>
             </div>
 
             {/* Job Title & Description */}
             <div className="mt-3">
               <h2 className="text-lg font-bold text-gray-900">{job?.title}</h2>
-              <p className="text-sm text-gray-600 line-clamp-2">{job?.description}</p>
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {job?.description}
+              </p>
             </div>
 
             {/* Badges (Position, Type, Salary) */}
