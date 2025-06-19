@@ -216,7 +216,7 @@ export const logout = async (req, res) => {
     try {
         return res.status(200).cookie("token", "", { maxAge: 0 }).json({
             message: "Logged out successfully.",
-            success: true
+            success: true,
         })
     } catch (error) {
         console.log(error);
@@ -381,10 +381,20 @@ export const updateProfile = async (req, res) => {
             saved_jobs,
         } = req.body;
 
+        // No brackets
+        const degrees = Array.isArray(req.body.degree) ? req.body.degree : [req.body.degree];
+        const institutes = Array.isArray(req.body.institute) ? req.body.institute : [req.body.institute];
+        const years = Array.isArray(req.body.year) ? req.body.year : [req.body.year];
+
+        const jobTitles = Array.isArray(req.body.job_title) ? req.body.job_title : [req.body.job_title];
+        const companies = Array.isArray(req.body.company) ? req.body.company : [req.body.company];
+        const jobYears = Array.isArray(req.body.years) ? req.body.years : [req.body.years];
+
+
+        // Handle file upload
         const file = req.file;
         let cloudResponse;
 
-        // Handle file upload if a file is present
         if (file) {
             const fileUri = getDataUri(file);
             if (!fileUri) {
@@ -395,6 +405,7 @@ export const updateProfile = async (req, res) => {
             }
             cloudResponse = await cloudinary.uploader.upload(fileUri.content);
         }
+
 
         const userId = req.id; // Set by middleware
         let user = await User.findById(userId);
@@ -409,8 +420,8 @@ export const updateProfile = async (req, res) => {
         // Update user fields
         if (fullname) user.fullname = fullname;
         if (email) user.email = email;
-        if (phoneNumber) user.mobile_no = phoneNumber;
         if (user_type) user.user_type = user_type;
+        if (phoneNumber) user.mobile_no = phoneNumber;
         if (gender) user.gender = gender;
         if (dob) user.dob = new Date(dob);
         if (location) user.location = location;
@@ -419,58 +430,44 @@ export const updateProfile = async (req, res) => {
         if (about_me) user.profile.about_me = about_me;
         if (preferred_job_types) user.profile.preferred_job_types = preferred_job_types;
         if (preferred_locations) user.profile.preferred_locations = preferred_locations;
-        if (applied_jobs) user.applied_jobs = applied_jobs;
-        if (saved_jobs) user.saved_jobs = saved_jobs;
         if (bio) user.profile.bio = bio;
         if (skills) user.profile.skills = skills;
 
-        // Initialize arrays to hold parsed experience and education data
-        const experience = [];
-        const education = [];
-
-        // Parse experience data from req.body
-        Object.keys(req.body).forEach((key) => {
-            const experienceMatch = key.match(/experience\[(\d+)\]\[(\w+)\]/);
-            if (experienceMatch) {
-                const index = parseInt(experienceMatch[1]);
-                const field = experienceMatch[2];
-
-                if (!experience[index]) {
-                    experience[index] = {};
-                }
-                experience[index][field === 'title' ? 'job_title' : field] = req.body[key];
-            }
-        });
-
-        // Parse education data from req.body
-        Object.keys(req.body).forEach((key) => {
-            const educationMatch = key.match(/education\[(\d+)\]\[(\w+)\]/);
-            if (educationMatch) {
-                const index = parseInt(educationMatch[1]);
-                const field = educationMatch[2];
-
-                if (!education[index]) {
-                    education[index] = {};
-                }
-                education[index][field] = req.body[key];
-            }
-        });
-
-        // Update experience and education if they were parsed
-        if (experience.length > 0) {
-            user.profile.experience = experience.map(exp => ({
-                job_title: exp.job_title,
-                company: exp.company,
-                years: exp.years
+        if (
+            degrees.every(Boolean) &&
+            institutes.every(Boolean) &&
+            years.every(Boolean)
+        ) {
+            user.profile.education = degrees.map((degree, index) => ({
+                degree,
+                institute: institutes[index],
+                year: years[index],
             }));
         }
 
-        if (education.length > 0) {
-            user.profile.education = education.map(edu => ({
-                degree: edu.degree,
-                institute: edu.institute,
-                year: edu.year
+        if (
+            jobTitles.every(Boolean) &&
+            companies.every(Boolean) &&
+            jobYears.every(Boolean)
+        ) {
+            user.profile.experience = jobTitles.map((jobTitle, index) => ({
+                job_title: jobTitle,
+                company: companies[index],
+                years: jobYears[index],
             }));
+        }
+
+
+        // Convert applied_jobs and saved_jobs to ObjectId if they are provided
+        if (applied_jobs) {
+            user.applied_jobs = Array.isArray(applied_jobs)
+                ? applied_jobs.map(jobId => mongoose.Types.ObjectId(jobId))
+                : [];
+        }
+        if (saved_jobs) {
+            user.saved_jobs = Array.isArray(saved_jobs)
+                ? saved_jobs.map(jobId => mongoose.Types.ObjectId(jobId))
+                : [];
         }
 
         // Handle file upload response
@@ -487,6 +484,11 @@ export const updateProfile = async (req, res) => {
             email: user.email,
             mobile_no: user.mobile_no,
             user_type: user.user_type,
+            gender: user.gender,
+            dob: user.dob,
+            location: user.location,
+            applied_jobs: user.applied_jobs,
+            saved_jobs: user.saved_jobs,
             profile: user.profile,
         };
 
@@ -504,6 +506,142 @@ export const updateProfile = async (req, res) => {
         });
     }
 };
+
+export const deleteEducationEntry = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { educationId } = req.body;
+
+        if (!educationId) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Education ID is required.",
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                status: 404,
+                message: "User not found.",
+            });
+        }
+
+        if (!user.profile.education || !Array.isArray(user.profile.education)) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Education data not found.",
+            });
+        }
+
+        const initialLength = user.profile.education.length;
+        user.profile.education = user.profile.education.filter(
+            (edu) => edu._id.toString() !== educationId
+        );
+
+        if (user.profile.education.length === initialLength) {
+            return res.status(404).json({
+                success: false,
+                status: 404,
+                message: "Education entry not found.",
+            });
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            status: 200,
+            message: "Education entry deleted successfully.",
+            user: {
+                _id: user._id,
+                fullname: user.fullname,
+                email: user.email,
+                profile: user.profile,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            status: 500,
+            message: "An error occurred while deleting the education entry.",
+            error: error.message,
+        });
+    }
+};
+
+export const deleteExperienceEntry = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { experienceId } = req.body;
+
+        if (!experienceId) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Experience ID is required.",
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                status: 404,
+                message: "User not found.",
+            });
+        }
+
+        if (!user.profile.experience || !Array.isArray(user.profile.experience)) {
+            return res.status(400).json({
+                success: false,
+                status: 400,
+                message: "Experience data not found.",
+            });
+        }
+
+        const initialLength = user.profile.experience.length;
+        user.profile.experience = user.profile.experience.filter(
+            (exp) => exp._id.toString() !== experienceId
+        );
+
+        if (user.profile.experience.length === initialLength) {
+            return res.status(404).json({
+                success: false,
+                status: 404,
+                message: "Experience entry not found.",
+            });
+        }
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            status: 200,
+            message: "Experience entry deleted successfully.",
+            user: {
+                _id: user._id,
+                fullname: user.fullname,
+                email: user.email,
+                profile: user.profile,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            status: 500,
+            message: "An error occurred while deleting the experience entry.",
+            error: error.message,
+        });
+    }
+};
+
+
 
 export const googleAuth = async (req, res) => {
     try {

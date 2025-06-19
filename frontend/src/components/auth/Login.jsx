@@ -220,6 +220,43 @@ const Login = () => {
     }
   };
 
+  // const handleLoginSuccess = async (userData) => {
+  //   if (!userData || !userData._id) {
+  //     toast.error("Invalid user data received");
+  //     return;
+  //   }
+
+  //   dispatch(setUser(userData));
+
+  //   try {
+  //     const { hasSubscription } = await checkSubscription(userData._id);
+  //     console.log("Subscription status:", hasSubscription);
+
+  //     // Store user data and subscription status
+  //     localStorage.setItem("hasActiveSubscription", hasSubscription);
+  //     localStorage.setItem("user_id", userData._id);
+
+  //     // Handle navigation based on role and subscription
+  //     if (hasSubscription) {
+  //       const routes = {
+  //         recruiter: "/admin/companies",
+  //         student: "/",
+  //         default: "/",
+  //       };
+
+  //       const route = routes[userData.role] || routes.default;
+  //       navigate(route);
+  //       toast.success(`Welcome back, ${userData.fullname}`);
+  //     } else {
+  //       // Redirect to subscription page if no active subscription
+  //       navigate("/subscription");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error during login flow:", error);
+  //     toast.error("Something went wrong. Please try again.");
+  //   }
+  // };
+
   const submitHandler = async (e) => {
     e.preventDefault();
     try {

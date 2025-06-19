@@ -36,9 +36,9 @@ const Companies = () => {
     dispatch(setSearchCompanyByText(input));
   }, [input]);
 
-  // if (!hasActiveSubscription) {
-  //   return <Navigate to="/subscription" />;
-  // }
+  if (!hasActiveSubscription) {
+    return <Navigate to="/subscription" />;
+  }
   return (
     <div>
       <Navbar />

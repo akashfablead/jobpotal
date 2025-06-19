@@ -83,17 +83,17 @@ const userSchema = new mongoose.Schema(
             profile_image: { type: String, default: "" },
             education: [
                 {
-                    degree: { type: String },
-                    institute: { type: String },
-                    year: { type: Number },
-                },
+                    degree: String,
+                    institute: String,
+                    year: Number,
+                }
             ],
             experience: [
                 {
-                    job_title: { type: String },
-                    company: { type: String },
-                    years: { type: String },
-                },
+                    job_title: String,
+                    company: String,
+                    years: String,
+                }
             ],
             linkedin_url: { type: String },
             portfolio_url: { type: String },

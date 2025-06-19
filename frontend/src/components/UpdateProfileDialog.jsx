@@ -16,6 +16,7 @@ const UpdateProfilePage = () => {
   const { user } = useSelector((store) => store.auth);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
+  const [profileImage, setProfileImage] = useState(null); // 👈 for image
 
   const skillOptions = [
     "JavaScript",
@@ -76,19 +77,11 @@ const UpdateProfilePage = () => {
           .split(",")
           .map((location) => location.trim())
       : [],
-    experience: [
-      {
-        title: "",
-        company: "",
-        years: "",
-      },
+    experience: user?.profile?.experience || [
+      { job_title: "", company: "", years: "" },
     ],
-    education: [
-      {
-        degree: "",
-        institute: "",
-        year: "",
-      },
+    education: user?.profile?.education || [
+      { degree: "", institute: "", year: "" },
     ],
   });
 
@@ -114,17 +107,12 @@ const UpdateProfilePage = () => {
       experience: [
         ...input.experience,
         {
-          title: "",
+          job_title: "",
           company: "",
           years: "",
         },
       ],
     });
-  };
-
-  const removeExperience = (index) => {
-    const newExperiences = input.experience.filter((_, i) => i !== index);
-    setInput({ ...input, experience: newExperiences });
   };
 
   const addEducation = () => {
@@ -139,11 +127,6 @@ const UpdateProfilePage = () => {
         },
       ],
     });
-  };
-
-  const removeEducation = (index) => {
-    const newEducation = input.education.filter((_, i) => i !== index);
-    setInput({ ...input, education: newEducation });
   };
 
   const fileChangeHandler = (e) => {
@@ -179,6 +162,10 @@ const UpdateProfilePage = () => {
       formData.append("file", file);
     }
 
+    if (profileImage) {
+      formData.append("profile_image", profileImage); // 👈 key name must match backend
+    }
+
     input.skills.forEach((skill) => {
       formData.append("skills[]", skill);
     });
@@ -192,15 +179,15 @@ const UpdateProfilePage = () => {
     });
 
     input.experience.forEach((exp, index) => {
-      formData.append(`experience[${index}][title]`, exp.title);
-      formData.append(`experience[${index}][company]`, exp.company);
-      formData.append(`experience[${index}][years]`, exp.years);
+      formData.append(`job_title[${index}]`, exp.job_title);
+      formData.append(`company[${index}]`, exp.company);
+      formData.append(`years[${index}]`, exp.years);
     });
 
     input.education.forEach((edu, index) => {
-      formData.append(`education[${index}][degree]`, edu.degree);
-      formData.append(`education[${index}][institute]`, edu.institute);
-      formData.append(`education[${index}][year]`, edu.year);
+      formData.append(`degree[${index}]`, edu.degree);
+      formData.append(`institute[${index}]`, edu.institute);
+      formData.append(`year[${index}]`, edu.year);
     });
 
     try {
@@ -222,6 +209,49 @@ const UpdateProfilePage = () => {
       toast.error(error?.response?.data?.message || "Update failed!");
     } finally {
       setLoading(false);
+    }
+  };
+  const deleteEducation = async (userId, educationId) => {
+    try {
+      const response = await axios.post(
+        `${USER_API_END_POINT}/education/${userId}`,
+        { educationId }, // ✅ send the body with educationId here
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true, // ✅ needed for session cookie
+        }
+      );
+
+      if (response.data.success === 200) {
+        toast.success("Education entry deleted successfully!");
+        dispatch(setUser(response.data.user));
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete education entry"
+      );
+    }
+  };
+
+  const deleteExperience = async (userId, experienceId) => {
+    try {
+      const response = await axios.post(
+        `${USER_API_END_POINT}/experience/${userId}`,
+        { experienceId }, // ✅ send the body with experienceId here
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true, // ✅ needed for session cookie
+        }
+      );
+
+      if (response.data.success === 200) {
+        toast.success("Experience entry deleted successfully!");
+        dispatch(setUser(response.data.user));
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete experience entry"
+      );
     }
   };
 
@@ -292,10 +322,10 @@ const UpdateProfilePage = () => {
       {input.experience.map((exp, index) => (
         <div key={index} className="space-y-2 border p-4 rounded">
           <Input
-            placeholder="Title"
-            value={exp.title}
+            placeholder="Job Title"
+            value={exp.job_title}
             onChange={(e) =>
-              experienceChangeHandler(index, "title", e.target.value)
+              experienceChangeHandler(index, "job_title", e.target.value)
             }
           />
           <Input
@@ -315,7 +345,7 @@ const UpdateProfilePage = () => {
           {index !== 0 && (
             <Button
               type="button"
-              onClick={() => removeExperience(index)}
+              onClick={() => deleteExperience(user._id, exp._id)}
               variant="destructive"
               size="sm"
             >
@@ -363,7 +393,7 @@ const UpdateProfilePage = () => {
           {index !== 0 && (
             <Button
               type="button"
-              onClick={() => removeEducation(index)}
+              onClick={() => deleteEducation(user._id, edu._id)}
               variant="destructive"
               size="sm"
             >
@@ -392,6 +422,27 @@ const UpdateProfilePage = () => {
             <h2 className="text-lg font-bold text-gray-700 border-b pb-2">
               Contact Information
             </h2>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="profileImage" className="text-right">
+                Profile Picture
+              </Label>
+              <div className="col-span-3 space-y-2">
+                {profileImage && (
+                  <img
+                    src={URL.createObjectURL(profileImage)}
+                    alt="Profile Preview"
+                    className="h-24 w-24 rounded-full object-cover border"
+                  />
+                )}
+                <Input
+                  id="profileImage"
+                  name="profileImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setProfileImage(e.target.files[0])}
+                />
+              </div>
+            </div>
             {renderInput("Full Name", "fullname", "text", true)}
             {renderInput("Email", "email", "email", true)}
             {renderInput("Phone Number", "phoneNumber")}

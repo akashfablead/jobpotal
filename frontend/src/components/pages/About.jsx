@@ -9,11 +9,11 @@
 //     <div className="max-w-screen-lg mx-auto px-4 py-8">
 //       <h1 className="text-3xl font-bold text-gray-900 mb-6">About Us</h1>
 //       <p className="text-gray-700 mb-4">
-//         Welcome to Job Hunt! We are dedicated to connecting job seekers with top employers worldwide.
+//         Welcome to WorkVista! We are dedicated to connecting job seekers with top employers worldwide.
 //         Our mission is to make the job search process seamless and efficient for everyone.
 //       </p>
 //       <p className="text-gray-700 mb-4">
-//         Whether you're looking for your dream job or the perfect candidate, Job Hunt is here to help.
+//         Whether you're looking for your dream job or the perfect candidate, WorkVista is here to help.
 //         With our advanced tools and resources, we aim to empower individuals and businesses to achieve their goals.
 //       </p>
 //       <h2 className="text-2xl font-bold text-gray-900 mt-6 mb-4">Our Vision</h2>
@@ -107,7 +107,7 @@ const About = () => {
         <div className="max-w-screen-xl mx-auto px-4 py-16 sm:py-24 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center opacity-0 animate-fade-up">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-              About Job Hunt
+              About WorkVista
             </h1>
             <p className="max-w-2xl mx-auto text-xl text-gray-200">
               Connecting talented professionals with their dream careers since
@@ -125,13 +125,13 @@ const About = () => {
               Our Mission
             </h2>
             <p className="text-lg text-gray-700 mb-6">
-              Welcome to Job Hunt! We are dedicated to connecting job seekers
+              Welcome to WorkVista! We are dedicated to connecting job seekers
               with top employers worldwide. Our mission is to make the job
               search process seamless and efficient for everyone.
             </p>
             <p className="text-lg text-gray-700">
               Whether you're looking for your dream job or the perfect
-              candidate, Job Hunt is here to help. With our advanced tools and
+              candidate, WorkVista is here to help. With our advanced tools and
               resources, we aim to empower individuals and businesses to achieve
               their goals.
             </p>
@@ -346,7 +346,7 @@ const About = () => {
             Our Leadership Team
           </h2>
           <p className="text-gray-700 max-w-3xl mx-auto">
-            Meet the passionate individuals behind Job Hunt's mission to
+            Meet the passionate individuals behind WorkVista's mission to
             transform the hiring landscape.
           </p>
         </div>
