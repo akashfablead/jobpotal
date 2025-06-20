@@ -135,6 +135,12 @@ export const login = async (req, res) => {
                 });
             }
 
+            const subscription = await Subscription.findOne({
+                userId: user._id,
+                status: { $in: [1, 2] },
+                endDate: { $gt: new Date() }
+            });
+
             // Generate JWT token
             const tokenData = { userId: user._id };
             const authToken = jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: "1d" });
@@ -148,6 +154,13 @@ export const login = async (req, res) => {
                     phoneNumber: user.phoneNumber,
                     role: user.role,
                     profilePhoto: user.profile.profilePhoto,
+                    hasActiveSubscription: !!subscription,
+                    subscription: subscription ? {
+                        _id: subscription._id,
+                        planType: subscription.planType,
+                        endDate: subscription.endDate,
+                        status: subscription.status
+                    } : null
                 },
                 token: authToken,
                 success: true,
@@ -185,6 +198,12 @@ export const login = async (req, res) => {
                 success: false,
             });
         }
+        // Get active subscription
+        const subscription = await Subscription.findOne({
+            userId: user._id,
+            status: { $in: [1, 2] },
+            endDate: { $gt: new Date() }
+        });
 
         const tokenData = {
             userId: user._id,
@@ -198,7 +217,8 @@ export const login = async (req, res) => {
             phoneNumber: user.phoneNumber,
             role: user.role,
             profile: user.profile,
-            token
+            token,
+            hasActiveSubscription: !!subscription,
         };
 
         return res.status(200).cookie("token", token, { maxAge: 1 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: "strict" }).json({
@@ -656,6 +676,7 @@ export const googleAuth = async (req, res) => {
 
         const { name, email, picture } = ticket.getPayload();
 
+
         // Check if user already exists
         let user = await User.findOne({ email });
         if (!user) {
@@ -689,6 +710,13 @@ export const googleAuth = async (req, res) => {
             });
         }
 
+        // Get active subscription
+        const subscription = await Subscription.findOne({
+            userId: user._id,
+            status: { $in: [1, 2] },
+            endDate: { $gt: new Date() }
+        });
+
         // Generate JWT token
         const tokenData = { userId: user._id };
         const authToken = jwt.sign(tokenData, process.env.SECRET_KEY, { expiresIn: "1d" });
@@ -702,6 +730,7 @@ export const googleAuth = async (req, res) => {
                 phoneNumber: user.phoneNumber,
                 role: user.role,
                 profile: user.profile,
+                hasActiveSubscription: !!subscription,
             },
             success: true,
         });

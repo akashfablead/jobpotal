@@ -89,28 +89,23 @@ const appRouter = createBrowserRouter([
   {
     path: "/subscription/thank-you",
     element: (
-      <ProtectedRoute>
-        <ThankYouPage />
-      </ProtectedRoute>
+      // <ProtectedRoute>
+      <ThankYouPage />
+      // </ProtectedRoute>
     ),
   },
 
   {
     path: "/subscription/cancel",
     element: (
-      <ProtectedRoute>
-        <CancelSubscriptionModal />
-      </ProtectedRoute>
+      // <ProtectedRoute>
+      <CancelSubscriptionModal />
+      // </ProtectedRoute>
     ),
   },
-  // admin ke liye yha se start hoga
   {
     path: "/subscription",
-    element: (
-      <ProtectedRoute>
-        <SubscriptionPlans />
-      </ProtectedRoute>
-    ),
+    element: <SubscriptionPlans />,
   },
   {
     path: "/admin/companies",

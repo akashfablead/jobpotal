@@ -223,15 +223,18 @@ export const cancelSubscription = async (req, res) => {
     const { subscriptionId } = req.params;
     const userId = req.id;
 
+    console.log("Received subscriptionId:", subscriptionId);
+    console.log("req.id (userId):", userId); // <-- ADD THIS
+
     const subscription = await Subscription.findOne({
       _id: subscriptionId,
-      userId
+      userId,
     });
 
     if (!subscription) {
       return res.status(404).json({
         success: false,
-        message: "Subscription not found"
+        message: "Subscription not found",
       });
     }
 
@@ -240,13 +243,13 @@ export const cancelSubscription = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Subscription cancelled successfully"
+      message: "Subscription cancelled successfully",
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({
       success: false,
-      message: "Error cancelling subscription"
+      message: "Error cancelling subscription",
     });
   }
 };

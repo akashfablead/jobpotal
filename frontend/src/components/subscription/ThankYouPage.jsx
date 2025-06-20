@@ -55,12 +55,11 @@ const ThankYouPage = () => {
         >
           Go Back to Home
         </Link>
-
-        {sessionId && (
+        {/* {sessionId && (
           <p className="text-gray-600 mb-8 text-lg">
             Your session ID is: {sessionId}
           </p>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -14,31 +14,36 @@ const Companies = () => {
   const [input, setInput] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  // const [hasActiveSubscription, setHasActiveSubscription] = useState();
+  const hasActiveSubscription =
+    localStorage.getItem("hasActiveSubscription") === "true";
 
-  useEffect(() => {
-    const fetchSubscriptionStatus = async () => {
-      const userId = localStorage.getItem("userId"); // Ensure you have the userId in local storage
-      if (userId) {
-        const subscriptionStatus = await checkSubscription(userId, dispatch);
-        setHasActiveSubscription(subscriptionStatus.hasSubscription);
-        localStorage.setItem(
-          "hasActiveSubscription",
-          subscriptionStatus.hasSubscription
-        );
-      }
-    };
+  console.log("Has Active Subscription:", hasActiveSubscription);
 
-    fetchSubscriptionStatus();
-  }, [dispatch]);
+  // useEffect(() => {
+  //   const fetchSubscriptionStatus = async () => {
+  //     const userId = localStorage.getItem("userId"); // Ensure you have the userId in local storage
+  //     if (userId) {
+  //       const subscriptionStatus = await checkSubscription(userId, dispatch);
+  //       setHasActiveSubscription(subscriptionStatus.hasSubscription);
+  //       localStorage.setItem(
+  //         "hasActiveSubscription",
+  //         subscriptionStatus.hasSubscription
+  //       );
+  //     }
+  //   };
+
+  //   fetchSubscriptionStatus();
+  // }, [dispatch]);
 
   useEffect(() => {
     dispatch(setSearchCompanyByText(input));
   }, [input]);
 
-  if (!hasActiveSubscription) {
-    return <Navigate to="/subscription" />;
-  }
+  // if (!hasActiveSubscription) {
+  //   return <Navigate to="/subscription" />;
+  // }
+
   return (
     <div>
       <Navbar />

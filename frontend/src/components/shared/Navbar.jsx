@@ -10,6 +10,7 @@ import { USER_API_END_POINT } from "@/utils/constant";
 import { setUser } from "@/redux/authSlice";
 import { toast } from "sonner";
 import logo from "../../assets/logo.png";
+import userlogo from "../../assets/user.png";
 
 const Navbar = () => {
   const { user } = useSelector((store) => store.auth);
@@ -96,7 +97,7 @@ const Navbar = () => {
               <PopoverTrigger asChild>
                 <Avatar className="cursor-pointer">
                   <AvatarImage
-                    src={user?.profile?.profilePhoto}
+                    src={user?.profile?.profilePhoto || userlogo}
                     alt="@shadcn"
                   />
                 </Avatar>
@@ -106,7 +107,7 @@ const Navbar = () => {
                   <div className="flex gap-2 space-y-2">
                     <Avatar className="cursor-pointer">
                       <AvatarImage
-                        src={user?.profile?.profilePhoto}
+                        src={user?.profile?.profilePhoto || userlogo}
                         alt="@shadcn"
                       />
                     </Avatar>
